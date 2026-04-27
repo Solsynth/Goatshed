@@ -10,7 +10,8 @@ export default defineNuxtConfig({
   site: {
     url: "https://littlesheep.me",
     name: "Goatshed",
-    description: "A stylish personal blog and digital clone powered by Solar Network.",
+    description:
+      "A stylish personal blog and digital clone powered by Solar Network.",
   },
   app: {
     head: {
@@ -25,7 +26,8 @@ export default defineNuxtConfig({
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         {
           name: "description",
-          content: "A stylish personal blog and digital clone powered by Solar Network.",
+          content:
+            "A stylish personal blog and digital clone powered by Solar Network.",
         },
         {
           name: "keywords",
@@ -41,7 +43,8 @@ export default defineNuxtConfig({
         },
         {
           property: "og:description",
-          content: "A stylish personal blog and digital clone powered by Solar Network.",
+          content:
+            "A stylish personal blog and digital clone powered by Solar Network.",
         },
         {
           property: "og:image",
@@ -56,7 +59,8 @@ export default defineNuxtConfig({
         },
         {
           name: "twitter:description",
-          content: "A stylish personal blog and digital clone powered by Solar Network.",
+          content:
+            "A stylish personal blog and digital clone powered by Solar Network.",
         },
         {
           name: "twitter:image",
@@ -65,13 +69,21 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+        {
+          rel: "preconnect",
+          href: "https://fonts.gstatic.com",
+          crossorigin: "",
+        },
         {
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap",
         },
-        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
-        { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
+        {
+          rel: "apple-touch-icon",
+          sizes: "180x180",
+          href: "/apple-touch-icon.png",
+        },
         { rel: "canonical", href: "https://littlesheep.me" },
       ],
     },
