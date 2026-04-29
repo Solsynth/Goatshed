@@ -16,8 +16,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: "Goatshed",
-      titleTemplate: (title) =>
-        title && title !== "Goatshed" ? `${title} - Goatshed` : "Goatshed",
+      titleTemplate: "%s - Goatshed",
       htmlAttrs: {
         lang: "zh-CN",
       },
