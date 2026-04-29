@@ -55,16 +55,8 @@ const auth = useAuth();
 const route = useRoute();
 const router = useRouter();
 
-const publisherEntries = await Promise.all(
-  props.publishers.map(async (name) => {
-    try {
-      const publisher = await $fetch<Publisher>(`/api/publishers/${name}`);
-      return [name, publisher] as const;
-    } catch {
-      return [name, null] as const;
-    }
-  }),
-);
+const publisherData = await $fetch<Record<string, Publisher | null>>('/api/publishers');
+const publisherEntries = props.publishers.map((name) => [name, publisherData[name] ?? null] as const);
 
 const publisherMap = Object.fromEntries(publisherEntries) as Record<PublisherName, Publisher | null>;
 

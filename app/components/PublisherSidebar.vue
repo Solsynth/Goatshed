@@ -78,12 +78,9 @@ const props = defineProps<{
 
 const config = useRuntimeConfig();
 
-const { data: publisher, pending, error } = await useFetch<Publisher>(
-  () => `/api/publishers/${props.publisherName}`,
-  {
-    watch: [() => props.publisherName],
-  },
-);
+const { data: publishersData, pending, error } = await useFetch<Record<string, Publisher | null>>('/api/publishers');
+
+const publisher = computed(() => publishersData.value?.[props.publisherName] ?? null);
 
 const { data: pinned, pending: pinnedPending } = await useFetch<Post[]>(
   () => `/api/publishers/${props.publisherName}/pinned`,
