@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen bg-base-100">
     <NuxtRouteAnnouncer />
+    <NuxtLoadingIndicator color="#038fec" />
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

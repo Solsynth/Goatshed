@@ -1,6 +1,6 @@
 <template>
   <main class="page-shell mx-auto py-8" data-pagefind-body>
-    <ShellBreadcrumb :path="`/posts/${activePub}/${postIdentifier}`" />
+    <ShellBreadcrumb :path="`/posts/${postIdentifier}`" />
 
     <section class="post-header relative mb-10 mt-8">
       <article
@@ -11,7 +11,7 @@
       >
         <NuxtLink
           v-if="postPictureUrl"
-          :to="`/posts/${activePub}/${postIdentifier}`"
+          :to="`/posts/${postIdentifier}`"
           class="-mx-6 -mt-6 mb-5 block overflow-hidden rounded-t-box border-b border-base-300/40"
         >
           <img
@@ -19,13 +19,19 @@
             :alt="post?.title || '文章配图'"
             class="aspect-video w-full object-cover"
             loading="lazy"
-          >
+          />
         </NuxtLink>
 
         <div class="relative flex min-w-0 flex-col gap-3">
-          <div v-if="heroBackgroundStyle" class="post-hero-bg" :style="heroBackgroundStyle" />
+          <div
+            v-if="heroBackgroundStyle"
+            class="post-hero-bg"
+            :style="heroBackgroundStyle"
+          />
 
-          <div class="relative z-10 flex flex-wrap items-center gap-2 text-xs text-base-content/70">
+          <div
+            class="relative z-10 flex flex-wrap items-center gap-2 text-xs text-base-content/70"
+          >
             <div class="inline-flex items-center gap-1.5">
               <img
                 v-if="publisherPictureUrl"
@@ -33,22 +39,32 @@
                 :alt="post?.publisher?.name || '发布者'"
                 class="h-4 w-4 rounded-full object-cover"
                 loading="lazy"
-              >
-              <span class="opacity-70">{{ post?.publisher?.nick || post?.publisher?.name }}</span>
+              />
+              <span class="opacity-70">{{
+                post?.publisher?.nick || post?.publisher?.name
+              }}</span>
             </div>
             <span>{{ publishedAt }}</span>
             <span v-if="post?.viewsUnique">{{ post.viewsUnique }} 次阅读</span>
           </div>
 
-          <h1 class="relative z-10 text-xl font-bold leading-tight sm:text-2xl lg:text-3xl">
+          <h1
+            class="relative z-10 text-xl font-bold leading-tight sm:text-2xl lg:text-3xl"
+          >
             {{ post?.title || "无标题文章" }}
           </h1>
 
-          <p v-if="post?.description" class="relative z-10 text-sm text-base-content/70 line-clamp-3">
+          <p
+            v-if="post?.description"
+            class="relative z-10 text-sm text-base-content/70 line-clamp-3"
+          >
             {{ post.description }}
           </p>
 
-          <div v-if="post?.tags.length" class="relative z-10 flex flex-wrap gap-1">
+          <div
+            v-if="post?.tags.length"
+            class="relative z-10 flex flex-wrap gap-1"
+          >
             <span
               v-for="tag in post.tags"
               :key="tag.id"
@@ -65,8 +81,19 @@
               rel="noopener noreferrer"
               class="inline-flex items-center gap-1.5 text-xs text-primary transition-colors hover:underline"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                />
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
@@ -122,35 +149,55 @@
             :alt="file.name || '文章附件'"
             class="h-32 w-full object-cover"
             loading="lazy"
-          >
+          />
         </a>
       </div>
     </section>
 
-    <div class="post-divider relative mb-8 mt-12 flex items-center justify-center gap-4" aria-hidden="true">
-      <div class="relative h-px flex-1 bg-linear-to-r from-transparent via-base-300/40 to-primary/30">
-        <div class="absolute inset-0 bg-linear-to-r from-transparent via-primary/35 to-primary/35 blur-[2px]" />
+    <div
+      class="post-divider relative mb-8 mt-12 flex items-center justify-center gap-4"
+      aria-hidden="true"
+    >
+      <div
+        class="relative h-px flex-1 bg-linear-to-r from-transparent via-base-300/40 to-primary/30"
+      >
+        <div
+          class="absolute inset-0 bg-linear-to-r from-transparent via-primary/35 to-primary/35 blur-[2px]"
+        />
       </div>
-      <div class="relative z-10 flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary/50 select-none">
-        <span class="h-1.5 w-1.5 rounded-full bg-primary/60 shadow-[0_0_8px_var(--color-primary)]" />
+      <div
+        class="relative z-10 flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary/50 select-none"
+      >
+        <span
+          class="h-1.5 w-1.5 rounded-full bg-primary/60 shadow-[0_0_8px_var(--color-primary)]"
+        />
         结束
       </div>
-      <div class="relative h-px flex-1 bg-linear-to-l from-transparent via-base-300/40 to-primary/30">
-        <div class="absolute inset-0 bg-linear-to-l from-transparent via-primary/35 to-primary/35 blur-[2px]" />
+      <div
+        class="relative h-px flex-1 bg-linear-to-l from-transparent via-base-300/40 to-primary/30"
+      >
+        <div
+          class="absolute inset-0 bg-linear-to-l from-transparent via-primary/35 to-primary/35 blur-[2px]"
+        />
       </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mt-10" data-pagefind-ignore>
       <NuxtLink
         v-if="prevPost"
-        :to="`/posts/${activePub}/${prevPostIdentifier}`"
+        :to="`/posts/${prevPostIdentifier}`"
         class="post-nav-link group relative flex flex-col gap-1 rounded-2xl border border-base-300/30 px-5 py-4 transition-all duration-300 hover:border-primary/40"
       >
         <div class="post-nav-bg" />
         <div class="flex items-center gap-1.5">
-          <span class="text-[10px] uppercase tracking-wider text-base-content/45">上一篇</span>
+          <span
+            class="text-[10px] uppercase tracking-wider text-base-content/45"
+            >上一篇</span
+          >
         </div>
-        <span class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary">
+        <span
+          class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary"
+        >
           {{ prevPost.title || "无标题文章" }}
         </span>
       </NuxtLink>
@@ -158,14 +205,19 @@
 
       <NuxtLink
         v-if="nextPost"
-        :to="`/posts/${activePub}/${nextPostIdentifier}`"
+        :to="`/posts/${nextPostIdentifier}`"
         class="post-nav-link group relative col-start-2 flex flex-col items-end gap-1 rounded-2xl border border-base-300/30 px-5 py-4 text-end transition-all duration-300 hover:border-primary/40"
       >
         <div class="post-nav-bg" />
         <div class="flex items-center gap-1.5">
-          <span class="text-[10px] uppercase tracking-wider text-base-content/45">下一篇</span>
+          <span
+            class="text-[10px] uppercase tracking-wider text-base-content/45"
+            >下一篇</span
+          >
         </div>
-        <span class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary">
+        <span
+          class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary"
+        >
           {{ nextPost.title || "无标题文章" }}
         </span>
       </NuxtLink>
@@ -216,6 +268,13 @@ const { data: nextPost } = await useAsyncData(
 
 const renderedContent = ref("");
 const tocItems = ref<TocItem[]>([]);
+
+watchEffect(() => {
+  if (post.value?.type === 0) {
+    const identifier = getPostIdentifier(post.value);
+    router.replace(`/moments/${identifier}`);
+  }
+});
 
 watch(
   () => post.value?.content,
@@ -342,7 +401,7 @@ useHead(() => ({
     { property: "og:type", content: "article" },
     {
       property: "og:url",
-      content: `https://littlesheep.me/posts/${activePub.value}/${postIdentifier.value}`,
+      content: `https://littlesheep.me/posts/${postIdentifier.value}`,
     },
     { property: "og:image", content: postOgImage.value },
     {
@@ -366,7 +425,7 @@ useHead(() => ({
   link: [
     {
       rel: "canonical",
-      href: `https://littlesheep.me/posts/${activePub.value}/${postIdentifier.value}`,
+      href: `https://littlesheep.me/posts/${postIdentifier.value}`,
     },
   ],
 }));

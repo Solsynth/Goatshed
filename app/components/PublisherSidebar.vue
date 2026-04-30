@@ -57,7 +57,7 @@
       </div>
       <ul v-else-if="pinned?.length" class="space-y-2">
         <li v-for="post in pinned" :key="post.id">
-          <NuxtLink :to="`/posts/${getPostIdentifier(post)}`" class="block rounded-md px-2 py-1.5 hover:bg-base-200">
+          <NuxtLink :to="getPostUrl(post)" class="block rounded-md px-2 py-1.5 hover:bg-base-200">
             <p class="line-clamp-1 text-sm font-semibold">{{ post.title || "无标题文章" }}</p>
             <p class="text-xs text-base-content/70">{{ new Date(post.publishedAt || post.createdAt).toLocaleDateString() }}</p>
           </NuxtLink>
@@ -119,4 +119,9 @@ const publisherAttachments = computed(() => {
       url: file.url || `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(file.id)}`,
     }));
 });
+
+function getPostUrl(post: Post) {
+  const identifier = getPostIdentifier(post);
+  return post.type === 0 ? `/moments/${identifier}` : `/posts/${identifier}`;
+}
 </script>

@@ -155,3 +155,25 @@
     min-height: 1.2em;
   }
 }
+
+.shiki {
+  background-color: transparent !important;
+}
+
+.shiki,
+.shiki span {
+  color: var(--shiki-light) !important;
+  background-color: transparent !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shiki,
+  .shiki span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
+[data-theme="goatshed-dark"] .shiki,
+[data-theme="goatshed-dark"] .shiki span {
+  color: var(--shiki-dark) !important;
+}

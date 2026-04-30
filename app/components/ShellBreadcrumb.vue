@@ -16,7 +16,7 @@
       <span class="hidden sm:inline opacity-40 mx-px">/</span>
       <template v-for="(segment, index) in displaySegments" :key="index">
         <NuxtLink
-          v-if="segment.path"
+          v-if="segment.path && !props.noLink"
           :to="segment.path"
           class="hover:text-primary hover:underline"
         >
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   path: string;
+  noLink?: boolean;
 }>();
 
 const auth = useAuth();

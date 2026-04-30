@@ -5,16 +5,21 @@ const nitroDataDir = process.env.NITRO_DATA_DIR?.trim() || ".data";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/image", "@nuxt/eslint"],
+  modules: ["@nuxt/image", "@nuxt/eslint", "nuxt-shiki"],
+  shiki: {
+    dynamic: true,
+    bundledLangs: ["cpp"],
+    bundledThemes: ["github-light", "github-dark", "ayu-light", "ayu-mirage"],
+  },
   experimental: {
     viewTransition: true,
   },
   css: ["~/assets/css/main.css"],
   site: {
     url: "https://littlesheep.me",
-    name: "Goatshed",
+    name: "Goatshed 山羊寒舍",
     description:
-      "A stylish personal blog and digital clone powered by Solar Network.",
+      "LittleSheep's personal blog powered by Solar Network. About tech, programming, and life.",
   },
   app: {
     head: {

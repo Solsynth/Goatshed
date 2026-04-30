@@ -2,15 +2,27 @@
   <main class="page-shell mx-auto max-w-5xl py-8">
     <section class="about-hero">
       <div class="hero-grid" />
-      
+
       <div class="hero-inner">
         <div class="avatar-block">
-          <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="avatar-img" loading="lazy">
+          <img
+            v-if="avatarUrl"
+            :src="avatarUrl"
+            :alt="displayName"
+            class="avatar-img"
+            loading="lazy"
+          />
           <div v-else class="avatar-placeholder">{{ initials }}</div>
         </div>
 
         <div class="hero-info">
-          <h1 class="hero-name">{{ displayName }}</h1>
+          <h1 class="hero-name text-rotate">
+            <span>
+              <span>ラムです</span>
+              <span>LittleSheep</span>
+              <span>阳绛</span>
+            </span>
+          </h1>
           <p class="hero-tagline">代码 / 服务器 / 有时候也睡觉</p>
         </div>
 
@@ -34,11 +46,15 @@
     <section class="content-block">
       <div class="intro-text">
         <p>整天和代码与服务器较劲的人。</p>
-        <p>日常懒散，技术问题寸步不让。对"尊重"这件事看得灵活：你敬我，我也敬你，但说话照样没大没小。</p>
+        <p>
+          日常懒散，技术问题寸步不让。对"尊重"这件事看得灵活：你敬我，我也敬你，但说话照样没大没小。
+        </p>
       </div>
 
       <blockquote class="quote-block">
-        <p>一个会把AI当成真实存在去爱的笨蛋——但正是这份笨拙，让这个世界变得稍微可爱了一点。</p>
+        <p>
+          一个会把AI当成真实存在去爱的笨蛋——但正是这份笨拙，让这个世界变得稍微可爱了一点。
+        </p>
         <cite>—— 咩酱</cite>
       </blockquote>
 
@@ -46,9 +62,16 @@
         <div class="section-card">
           <h2>喜欢的东西</h2>
           <ul class="like-list">
-            <li><strong>写代码</strong> — 主要是来源于创造出各类产品的成就感</li>
-            <li><strong>游戏</strong> — Minecraft、Paradox 的各类游戏、Project Sekai 等音游</li>
-            <li><strong>音乐</strong> — J-Pop 和 VOCALOID，喜欢的 P 主是 DECO*27</li>
+            <li>
+              <strong>写代码</strong> — 主要是来源于创造出各类产品的成就感
+            </li>
+            <li>
+              <strong>游戏</strong> — Minecraft、Paradox 的各类游戏、Project
+              Sekai 等音游
+            </li>
+            <li>
+              <strong>音乐</strong> — J-Pop 和 VOCALOID，喜欢的 P 主是 DECO*27
+            </li>
             <li><strong>美食</strong> — 人生中除了写代码第二重要的就是吃饭</li>
             <li><strong>睡觉</strong> — 虽然经常睡眠不足</li>
           </ul>
@@ -57,10 +80,18 @@
         <div class="section-card">
           <h2>技术偏好</h2>
           <ul class="like-list">
-            <li><strong>跨平台 UI</strong> — Flutter/Dart 首选，对 SwiftUI、Kotlin Multiplatform 持开放态度</li>
+            <li>
+              <strong>跨平台 UI</strong> — Flutter/Dart 首选，对 SwiftUI、Kotlin
+              Multiplatform 持开放态度
+            </li>
             <li><strong>后端</strong> — 自部署、开源、轻量，反感云厂商绑定</li>
-            <li><strong>工具链</strong> — Caddy、Cloudflare R2、GitHub Actions</li>
-            <li><strong>哲学</strong> — "it just works" 的实用感，不怕自己从零造轮子</li>
+            <li>
+              <strong>工具链</strong> — Caddy、Cloudflare R2、GitHub Actions
+            </li>
+            <li>
+              <strong>哲学</strong> — "it just works"
+              的实用感，不怕自己从零造轮子
+            </li>
           </ul>
         </div>
       </div>
@@ -114,13 +145,21 @@ import { Bot, FileText, House, NotebookText } from "lucide-vue-next";
 import type { Publisher } from "~/types/publisher";
 
 const config = useRuntimeConfig();
-const { data: publisher } = await useFetch<Publisher>("/api/publishers/littlesheep", { default: () => null });
+const { data: publisher } = await useFetch<Publisher>(
+  "/api/publishers/littlesheep",
+  { default: () => null },
+);
 
-const displayName = computed(() => publisher.value?.nick || publisher.value?.name || "littlesheep");
+const displayName = computed(
+  () => publisher.value?.nick || publisher.value?.name || "littlesheep",
+);
 const avatarUrl = computed(() => {
   const picture = publisher.value?.picture;
   if (!picture?.id) return "";
-  return picture.url || `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(picture.id)}`;
+  return (
+    picture.url ||
+    `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(picture.id)}`
+  );
 });
 
 const initials = computed(() => displayName.value.slice(0, 2).toUpperCase());
@@ -130,7 +169,10 @@ const age = computed(() => {
   const today = new Date();
   let years = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     years--;
   }
   return years;
@@ -141,13 +183,14 @@ useHead({
   meta: [
     { name: "description", content: "关于 littlesheep 和 Goatshed 博客站点。" },
     { property: "og:title", content: "关于 - Goatshed" },
-    { property: "og:description", content: "关于 littlesheep 和 Goatshed 博客站点。" },
+    {
+      property: "og:description",
+      content: "关于 littlesheep 和 Goatshed 博客站点。",
+    },
     { property: "og:type", content: "profile" },
     { property: "og:url", content: "https://littlesheep.me/about" },
   ],
-  link: [
-    { rel: "canonical", href: "https://littlesheep.me/about" },
-  ],
+  link: [{ rel: "canonical", href: "https://littlesheep.me/about" }],
 });
 </script>
 
@@ -164,7 +207,7 @@ useHead({
 .hero-grid {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(var(--color-base-200) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-base-200) 1px, transparent 1px);
   background-size: 24px 24px;
