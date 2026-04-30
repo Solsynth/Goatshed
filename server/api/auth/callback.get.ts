@@ -6,7 +6,7 @@ import {
   readOAuthPkceCookie,
   readOAuthRedirectCookie,
   readOAuthStateCookie,
-  setSessionCookie,
+  createSession,
 } from "../../utils/session";
 import { oauthLog, redact } from "../../utils/oauth-log";
 
@@ -224,7 +224,7 @@ export default defineEventHandler(async (event) => {
     refreshToken,
     expiresAt: Date.now() + expiresIn * 1000,
   };
-  setSessionCookie(event, session);
+  await createSession(event, session);
 
   const redirectPath = readOAuthRedirectCookie(event) || "/me";
   clearOAuthRedirectCookie(event);

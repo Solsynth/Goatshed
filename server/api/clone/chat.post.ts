@@ -370,7 +370,7 @@ function parseOptionalNumber(text: string, key: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = readSession(event);
+  const session = await readSession(event);
   if (!session) {
     throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
   }

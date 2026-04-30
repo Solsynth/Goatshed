@@ -148,7 +148,7 @@ const router = useRouter();
 const showLogoutConfirm = ref(false);
 const isLoggingOut = ref(false);
 
-const displayName = computed(() => auth.user.value?.nick || auth.user.value?.name || "未知用户");
+const displayName = computed(() => account.value?.profile?.nick || auth.user.value?.nick || auth.user.value?.name || "未知用户");
 
 const avatarUrl = computed(() => {
   const username = auth.user.value?.username || auth.user.value?.name;

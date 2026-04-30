@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (LOCKED_PUBLISHERS.has(name)) {
-    const session = readSession(event);
+    const session = await readSession(event);
     if (!session) {
       throw createError({
         statusCode: 401,

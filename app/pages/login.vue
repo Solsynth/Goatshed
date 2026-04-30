@@ -50,14 +50,17 @@
               使用 {{ providerName }} 继续
             </button>
 
-            <div class="divider text-base-content/40 text-sm">安全说明</div>
+            <div class="divider text-base-content/40 text-sm">一些说明</div>
 
             <div class="space-y-3 text-xs text-base-content/60">
               <p>
-                登录后，你的访问令牌将安全存储在服务器端会话中，用于访问受保护的内容。
+                虽然 Solarpass 和 Goatshed 都是 @littlesheep 小羊的项目， 但是
+                Goatshed 不隶属于 Solar Network。其维护两套帐号系统。
               </p>
               <p>
-                本站使用 OAuth 2.0 授权码流程，你的密码永远不会经过本站服务器。
+                本站使用 Solar Network 的 OpenID Connect
+                能力，你的密码永远不会经过任何第三方离开 Solar Network
+                的服务器。你也可以参考本站实现你自己的 Sign in with Solarpass :D
               </p>
             </div>
           </div>

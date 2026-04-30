@@ -1,12 +1,16 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { H3Event } from "h3";
 import { getCookie, setCookie, deleteCookie } from "h3";
-import type { SessionData } from "../../app/types/auth";
+import type { SessionCookie, SessionData, CachedUserData, AccountProfile } from "../../app/types/auth";
 
 const SESSION_COOKIE = "goatshed_session";
 const STATE_COOKIE = "goatshed_oauth_state";
 const REDIRECT_COOKIE = "goatshed_oauth_redirect";
 const PKCE_COOKIE = "goatshed_oauth_pkce";
+
+const STORAGE_SESSION_PREFIX = "session:";
+const STORAGE_USER_PREFIX = "user:";
+const USER_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 function toBase64Url(input: string): string {
   return Buffer.from(input, "utf8").toString("base64url");
@@ -25,14 +29,18 @@ function getSecret(event: H3Event): string {
   return config.authSessionSecret;
 }
 
-export function createSessionToken(event: H3Event, session: SessionData): string {
+function generateSessionId(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+function createSessionCookieToken(event: H3Event, cookie: SessionCookie): string {
   const secret = getSecret(event);
-  const payload = toBase64Url(JSON.stringify(session));
+  const payload = toBase64Url(JSON.stringify(cookie));
   const signature = sign(payload, secret);
   return `${payload}.${signature}`;
 }
 
-export function parseSessionToken(event: H3Event, token: string): SessionData | null {
+function parseSessionCookieToken(event: H3Event, token: string): SessionCookie | null {
   const secret = getSecret(event);
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return null;
@@ -45,33 +53,134 @@ export function parseSessionToken(event: H3Event, token: string): SessionData | 
   if (!timingSafeEqual(expectedBytes, signatureBytes)) return null;
 
   try {
-    const parsed = JSON.parse(fromBase64Url(payload)) as SessionData;
-    if (!parsed?.user?.id || parsed.expiresAt < Date.now()) return null;
+    const parsed = JSON.parse(fromBase64Url(payload)) as SessionCookie;
+    if (!parsed?.sessionId || parsed.expiresAt < Date.now()) return null;
     return parsed;
   } catch {
     return null;
   }
 }
 
-export function setSessionCookie(event: H3Event, session: SessionData) {
-  const maxAge = Math.max(0, Math.floor((session.expiresAt - Date.now()) / 1000));
-  setCookie(event, SESSION_COOKIE, createSessionToken(event, session), {
+async function storeSessionData(sessionId: string, data: SessionData): Promise<void> {
+  const storage = useStorage("data");
+  await storage.setItem(`${STORAGE_SESSION_PREFIX}${sessionId}`, data);
+}
+
+async function readSessionData(sessionId: string): Promise<SessionData | null> {
+  const storage = useStorage("data");
+  const data = await storage.getItem<SessionData>(`${STORAGE_SESSION_PREFIX}${sessionId}`);
+  if (!data || data.expiresAt < Date.now()) {
+    await storage.removeItem(`${STORAGE_SESSION_PREFIX}${sessionId}`);
+    return null;
+  }
+  return data;
+}
+
+async function deleteSessionData(sessionId: string): Promise<void> {
+  const storage = useStorage("data");
+  await storage.removeItem(`${STORAGE_SESSION_PREFIX}${sessionId}`);
+}
+
+async function getCachedUser(userId: string): Promise<SessionUser | null> {
+  const storage = useStorage("data");
+  const cached = await storage.getItem<CachedUserData>(`${STORAGE_USER_PREFIX}${userId}`);
+  if (!cached || Date.now() - cached.cachedAt > USER_CACHE_TTL) {
+    return null;
+  }
+  return cached.data;
+}
+
+async function setCachedUser(userId: string, data: SessionUser): Promise<void> {
+  const storage = useStorage("data");
+  await storage.setItem(`${STORAGE_USER_PREFIX}${userId}`, {
+    data,
+    cachedAt: Date.now(),
+  });
+}
+
+async function fetchAccountFromApi(event: H3Event, accessToken: string): Promise<AccountProfile | null> {
+  const config = useRuntimeConfig(event);
+  try {
+    const response = await fetch(`${config.public.apiBaseUrl}/passport/accounts/me`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function createSession(event: H3Event, data: SessionData): Promise<string> {
+  const sessionId = generateSessionId();
+  await storeSessionData(sessionId, data);
+
+  const cookie: SessionCookie = {
+    sessionId,
+    expiresAt: data.expiresAt,
+  };
+
+  const maxAge = Math.max(0, Math.floor((data.expiresAt - Date.now()) / 1000));
+  setCookie(event, SESSION_COOKIE, createSessionCookieToken(event, cookie), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge,
   });
+
+  return sessionId;
+}
+
+export async function readSession(event: H3Event): Promise<SessionData | null> {
+  const token = getCookie(event, SESSION_COOKIE);
+  if (!token) return null;
+
+  const cookie = parseSessionCookieToken(event, token);
+  if (!cookie) return null;
+
+  return await readSessionData(cookie.sessionId);
+}
+
+export async function readSessionWithUser(event: H3Event): Promise<SessionData | null> {
+  const session = await readSession(event);
+  if (!session) return null;
+
+  const cachedUser = await getCachedUser(session.user.id);
+  if (cachedUser) {
+    return { ...session, user: cachedUser };
+  }
+
+  const account = await fetchAccountFromApi(event, session.accessToken);
+  if (account) {
+    const updatedUser = {
+      id: account.id,
+      name: account.name,
+      nick: account.profile?.nick ?? account.nick,
+      username: account.name,
+    };
+    await setCachedUser(session.user.id, updatedUser);
+    return { ...session, user: updatedUser };
+  }
+
+  return session;
+}
+
+export async function destroySession(event: H3Event): Promise<void> {
+  const token = getCookie(event, SESSION_COOKIE);
+  if (token) {
+    const cookie = parseSessionCookieToken(event, token);
+    if (cookie) {
+      await deleteSessionData(cookie.sessionId);
+    }
+  }
+  deleteCookie(event, SESSION_COOKIE, { path: "/" });
 }
 
 export function clearSessionCookie(event: H3Event) {
   deleteCookie(event, SESSION_COOKIE, { path: "/" });
-}
-
-export function readSession(event: H3Event): SessionData | null {
-  const token = getCookie(event, SESSION_COOKIE);
-  if (!token) return null;
-  return parseSessionToken(event, token);
 }
 
 export function createOAuthState(): string {

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const requestedType = Number(query.type);
   const type = requestedType === 0 ? 0 : 1;
 
-  const session = readSession(event);
+  const session = await readSession(event);
   const token = session?.accessToken;
 
   if (LOCKED_PUBLISHERS.has(pub) && !session) {

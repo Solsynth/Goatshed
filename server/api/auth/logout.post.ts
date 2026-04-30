@@ -1,6 +1,6 @@
-import { clearSessionCookie } from "../../utils/session";
+import { destroySession } from "../../utils/session";
 
-export default defineEventHandler((event) => {
-  clearSessionCookie(event);
+export default defineEventHandler(async (event) => {
+  await destroySession(event);
   return { ok: true };
 });

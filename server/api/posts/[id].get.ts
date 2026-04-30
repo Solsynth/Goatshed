@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Missing post id" });
   }
 
-  const session = readSession(event);
+  const session = await readSession(event);
   const token = session?.accessToken;
 
   const post = await floatingFetch<Post>(

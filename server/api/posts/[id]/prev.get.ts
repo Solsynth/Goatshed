@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const pubParam = typeof query.pub === "string" ? query.pub : undefined;
   const typeParam = query.type !== undefined ? Number(query.type) : undefined;
 
-  const session = readSession(event);
+  const session = await readSession(event);
   const token = session?.accessToken;
 
   const currentPost = await floatingFetch<Post>(
