@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
   const currentPost = await floatingFetch<Post>(
     event,
-    `/sphere/posts/${encodeURIComponent(id)}`,
+    `/sphere/posts/${id}`,
     { token },
   );
 
@@ -43,8 +43,8 @@ export default defineEventHandler(async (event) => {
     type: String(type),
     take: "1",
     offset: "0",
-    orderDesc: "false",
-    publishedAfter: currentPost.publishedAt,
+    orderDesc: "true",
+    publishedBefore: currentPost.publishedAt,
   });
 
   const result = await floatingFetch<Post[]>(event, `/sphere/posts?${params.toString()}`, { token });

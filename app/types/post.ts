@@ -31,6 +31,7 @@ export interface PostTag {
 
 export interface Post {
   id: string;
+  slug?: string | null;
   type?: number;
   title: string | null;
   description: string | null;

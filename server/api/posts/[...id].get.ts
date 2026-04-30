@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const post = await floatingFetch<Post>(
     event,
-    `/sphere/posts/${encodeURIComponent(id)}`,
+    `/sphere/posts/${id}`,
     { token },
   );
 

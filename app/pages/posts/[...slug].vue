@@ -1,5 +1,7 @@
 <template>
-  <main class="page-shell mx-auto max-w-4xl pb-12" data-pagefind-body>
+  <main class="page-shell mx-auto py-8" data-pagefind-body>
+    <ShellBreadcrumb :path="`/posts/${postIdentifier}`" />
+
     <section class="post-header relative mb-10 mt-8 text-center">
       <div class="post-hero-bg" :style="heroBackgroundStyle" />
       <div
@@ -158,7 +160,7 @@
     <div class="grid grid-cols-2 gap-3 mt-10" data-pagefind-ignore>
       <NuxtLink
         v-if="prevPost"
-        :to="`/posts/${prevPost.id}`"
+        :to="`/posts/${prevPostIdentifier}`"
         class="post-nav-link group relative flex flex-col gap-1 rounded-2xl border border-base-300/30 px-5 py-4 transition-all duration-300 hover:border-primary/40"
       >
         <div class="post-nav-bg" />
@@ -178,7 +180,7 @@
 
       <NuxtLink
         v-if="nextPost"
-        :to="`/posts/${nextPost.id}`"
+        :to="`/posts/${nextPostIdentifier}`"
         class="post-nav-link group relative col-start-2 flex flex-col items-end gap-1 rounded-2xl border border-base-300/30 px-5 py-4 text-end transition-all duration-300 hover:border-primary/40"
       >
         <div class="post-nav-bg" />
@@ -201,24 +203,30 @@
 <script setup lang="ts">
 import type { Post } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
+import { getPostIdentifier } from "~/utils/post";
 
 const route = useRoute();
 const config = useRuntimeConfig();
+
+const postSlug = computed(() => {
+  const slug = route.params.slug;
+  return Array.isArray(slug) ? slug.join("/") : slug;
+});
 
 const {
   data: post,
   pending,
   error,
-} = await useAsyncData(`post-${route.params.id}`, () =>
-  $fetch<Post>(`/api/posts/${route.params.id}`),
+} = await useAsyncData(`post-${postSlug.value}`, () =>
+  $fetch<Post>(`/api/posts/${postSlug.value}`),
 );
 const { data: prevPost } = await useAsyncData(
-  `post-${route.params.id}-prev`,
-  () => $fetch<Post | null>(`/api/posts/${route.params.id}/prev`),
+  `post-${postSlug.value}-prev`,
+  () => $fetch<Post | null>(`/api/posts/${postSlug.value}/prev`),
 );
 const { data: nextPost } = await useAsyncData(
-  `post-${route.params.id}-next`,
-  () => $fetch<Post | null>(`/api/posts/${route.params.id}/next`),
+  `post-${postSlug.value}-next`,
+  () => $fetch<Post | null>(`/api/posts/${postSlug.value}/next`),
 );
 
 const renderedContent = ref("");
@@ -239,6 +247,10 @@ const publishedAt = computed(() => {
 });
 
 const isArticle = computed(() => post.value?.type === 1);
+
+const postIdentifier = computed(() => post.value ? getPostIdentifier(post.value) : "");
+const prevPostIdentifier = computed(() => prevPost.value ? getPostIdentifier(prevPost.value) : "");
+const nextPostIdentifier = computed(() => nextPost.value ? getPostIdentifier(nextPost.value) : "");
 
 const postPictureUrl = computed(() => {
   const pic = post.value?.picture;
@@ -326,7 +338,7 @@ useHead(() => ({
     { property: "og:type", content: "article" },
     {
       property: "og:url",
-      content: `https://littlesheep.me/posts/${route.params.id}`,
+      content: `https://littlesheep.me/posts/${postIdentifier.value}`,
     },
     { property: "og:image", content: postOgImage.value },
     {
@@ -350,7 +362,7 @@ useHead(() => ({
   link: [
     {
       rel: "canonical",
-      href: `https://littlesheep.me/posts/${route.params.id}`,
+      href: `https://littlesheep.me/posts/${postIdentifier.value}`,
     },
   ],
 }));

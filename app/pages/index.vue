@@ -2,15 +2,7 @@
   <main class="page-shell relative min-w-0 py-8">
     <section id="hero" class="relative pb-14 pt-10 sm:pb-20 sm:pt-14">
       <div class="relative z-10">
-        <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-base-300/60 bg-base-200/50 px-3.5 py-1.5 text-xs sm:text-sm">
-          <span class="relative flex h-2 w-2">
-            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-            <span class="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
-          <span class="text-primary">guest@goatshed</span>
-          <span>/blog/{{ activePub }}</span>
-          <span class="opacity-40">$</span>
-        </div>
+        <ShellBreadcrumb :path="`/blog/${activePub}`" />
 
         <h1 class="hero-title mb-3 text-5xl font-bold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl">
           Goatshed

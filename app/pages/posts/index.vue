@@ -1,5 +1,7 @@
 <template>
   <main class="page-shell min-w-0 py-8">
+    <ShellBreadcrumb path="/posts" />
+
     <section class="mb-6">
       <h1 class="text-3xl font-extrabold tracking-tight">文章</h1>
       <p class="mt-2 text-sm text-base-content/70">

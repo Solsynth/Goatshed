@@ -1,5 +1,7 @@
 <template>
   <main class="page-shell mx-auto max-w-2xl py-8">
+    <ShellBreadcrumb path="/moments" />
+
     <section class="mb-8">
       <h1 class="text-3xl font-extrabold tracking-tight">动态</h1>
       <p class="mt-2 text-sm text-base-content/70">来自所选发布者的短内容更新。</p>
@@ -24,7 +26,7 @@
           <span>{{ formatDate(post.publishedAt || post.createdAt) }}</span>
         </div>
 
-        <NuxtLink :to="`/posts/${post.id}?pub=${activePub}`" class="block hover:no-underline">
+        <NuxtLink :to="`/posts/${getPostIdentifier(post)}?pub=${activePub}`" class="block hover:no-underline">
           <h2 v-if="post.title" class="text-base font-bold leading-snug text-base-content/90">
             {{ post.title }}
           </h2>
@@ -44,7 +46,7 @@
 
         <NuxtLink
           v-if="coverImage(post)"
-          :to="`/posts/${post.id}?pub=${activePub}`"
+          :to="`/posts/${getPostIdentifier(post)}?pub=${activePub}`"
           class="-mx-5 -mb-5 mt-4 block overflow-hidden border-t border-base-300/40"
         >
           <img :src="coverImage(post)!.src" :alt="coverImage(post)!.alt" class="aspect-video w-full object-cover" loading="lazy">
@@ -66,6 +68,7 @@
 import { PUBLISHERS, isPublisherName, type PublisherName } from "~/constants/publishers";
 import type { Post, PostListResponse } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
+import { getPostIdentifier } from "~/utils/post";
 
 const route = useRoute();
 const router = useRouter();
