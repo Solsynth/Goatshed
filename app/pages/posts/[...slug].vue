@@ -85,12 +85,23 @@
       <span>{{ error.message }}</span>
     </div>
 
-    <article
-      v-else-if="post"
-      id="article"
-      class="prose-goatshed app-panel min-w-0 p-6 sm:p-7"
-      v-html="renderedContent"
-    />
+    <div v-else-if="post" class="post-content-grid">
+      <div class="post-main-column">
+        <aside v-if="tocItems.length" class="post-toc-mobile mb-4 xl:hidden">
+          <PostToc :items="tocItems" />
+        </aside>
+
+        <article
+          id="article"
+          class="prose-goatshed post-article min-w-0 p-0 sm:p-6 lg:p-7"
+          v-html="renderedContent"
+        />
+      </div>
+
+      <aside v-if="tocItems.length" class="post-toc hidden xl:block">
+        <PostToc :items="tocItems" />
+      </aside>
+    </div>
 
     <section
       v-if="postPictureUrl || (!isArticle && postAttachments.length)"
@@ -204,6 +215,7 @@
 import type { Post } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
 import { getPostIdentifier } from "~/utils/post";
+import { extractToc, injectHeadingIds, type TocItem } from "~/utils/toc";
 
 const route = useRoute();
 const config = useRuntimeConfig();
@@ -234,10 +246,19 @@ const renderedContent = ref("");
 watch(
   () => post.value?.content,
   async (content) => {
-    renderedContent.value = content ? await renderMarkdown(content) : "";
+    if (content) {
+      const rendered = await renderMarkdown(content);
+      renderedContent.value = injectHeadingIds(rendered);
+      tocItems.value = extractToc(renderedContent.value);
+    } else {
+      renderedContent.value = "";
+      tocItems.value = [];
+    }
   },
   { immediate: true },
 );
+
+const tocItems = ref<TocItem[]>([]);
 
 const publishedAt = computed(() => {
   if (!post.value) return "";
@@ -248,9 +269,15 @@ const publishedAt = computed(() => {
 
 const isArticle = computed(() => post.value?.type === 1);
 
-const postIdentifier = computed(() => post.value ? getPostIdentifier(post.value) : "");
-const prevPostIdentifier = computed(() => prevPost.value ? getPostIdentifier(prevPost.value) : "");
-const nextPostIdentifier = computed(() => nextPost.value ? getPostIdentifier(nextPost.value) : "");
+const postIdentifier = computed(() =>
+  post.value ? getPostIdentifier(post.value) : "",
+);
+const prevPostIdentifier = computed(() =>
+  prevPost.value ? getPostIdentifier(prevPost.value) : "",
+);
+const nextPostIdentifier = computed(() =>
+  nextPost.value ? getPostIdentifier(nextPost.value) : "",
+);
 
 const postPictureUrl = computed(() => {
   const pic = post.value?.picture;
@@ -400,6 +427,49 @@ useHead(() => ({
   pointer-events: none;
   z-index: 0;
   border-radius: 1.5rem;
+}
+
+.post-content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 1280px) {
+  .post-content-grid {
+    grid-template-columns: 1fr 16rem;
+    max-width: 72rem;
+    gap: 1.5rem;
+  }
+}
+
+.post-main-column {
+  min-width: 0;
+}
+
+.post-toc-mobile {
+  position: relative;
+}
+
+.post-toc-mobile :deep(.toc-wrapper) {
+  position: relative;
+  top: 0;
+}
+
+.post-article {
+  padding: 0 1rem;
+  border-radius: 0;
+}
+
+@media (min-width: 640px) {
+  .post-article {
+    padding: 1.5rem 1.75rem;
+    border-radius: var(--radius-box, 0.9rem);
+    border: 1px solid color-mix(in srgb, var(--color-base-300) 70%, transparent);
+    background-color: var(--color-base-100);
+  }
 }
 
 .post-nav-link {
