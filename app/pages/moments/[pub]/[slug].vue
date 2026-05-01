@@ -13,9 +13,7 @@
     <template v-else-if="post">
       <header class="moment-header">
         <button class="btn btn-ghost btn-sm gap-1.5" @click="goBack">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeft class="h-4 w-4" />
           动态
         </button>
       </header>
@@ -57,18 +55,14 @@
               class="carousel-arrow carousel-arrow-left"
               @click="carouselIndex--"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
+              <ChevronLeft class="h-4 w-4" />
             </button>
             <button
               v-show="carouselIndex < postImages.length - 1"
               class="carousel-arrow carousel-arrow-right"
               @click="carouselIndex++"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight class="h-4 w-4" />
             </button>
             <div class="carousel-progress">
               <div class="carousel-progress-track">
@@ -80,11 +74,7 @@
             </div>
           </div>
           <div v-else class="moment-media-inner flex items-center justify-center bg-base-200/30">
-            <span class="text-base-content/30 text-6xl">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </span>
+            <ImageOff class="h-16 w-16 text-base-content/20" />
           </div>
         </div>
 
@@ -119,6 +109,30 @@
               class="prose-goatshed max-w-none"
               v-html="renderedContent"
             />
+
+            <div v-if="post.tags?.length || post.id" class="moment-meta mt-6 flex flex-col gap-3">
+              <div v-if="post.tags?.length" class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="tag in post.tags"
+                  :key="tag.id"
+                  class="badge badge-ghost badge-sm"
+                >
+                  #{{ tag.slug }}
+                </span>
+              </div>
+
+              <div v-if="post.id" class="flex items-center gap-3">
+                <a
+                  :href="`https://solian.app/posts/${post.id}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 text-xs text-primary/70 transition-colors hover:text-primary"
+                >
+                  <ExternalLink class="h-3.5 w-3.5" />
+                  在 Solian 查看
+                </a>
+              </div>
+            </div>
 
             <div
               class="post-divider relative my-8 flex items-center justify-center gap-4"
@@ -158,19 +172,15 @@
 import type { Post } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
 import { getPostIdentifier } from "~/utils/post";
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink, ImageOff } from "lucide-vue-next";
 
 definePageMeta({ layout: "blank" });
 
 const route = useRoute();
-const router = useRouter();
 const config = useRuntimeConfig();
 
 function goBack() {
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    navigateTo(`/moments/${activePub.value}`);
-  }
+  navigateTo(`/moments/${activePub.value}`);
 }
 
 const activePub = computed(() => {

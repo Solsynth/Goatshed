@@ -125,18 +125,14 @@
                 class="carousel-arrow carousel-arrow-left"
                 @click="carouselIndex[post.id]--"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+                <ChevronLeft class="h-4 w-4" />
               </button>
               <button
                 v-show="carouselIndex[post.id] < postImages(post).length - 1"
                 class="carousel-arrow carousel-arrow-right"
                 @click="carouselIndex[post.id]++"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight class="h-4 w-4" />
               </button>
               <div class="carousel-progress">
                 <div class="carousel-progress-track">
@@ -184,6 +180,7 @@ import {
 import type { Post, PostListResponse } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
 import { getPostIdentifier } from "~/utils/post";
+import { ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 const route = useRoute();
 const router = useRouter();
