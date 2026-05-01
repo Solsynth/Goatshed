@@ -25,128 +25,105 @@
       <span>{{ error }}</span>
     </section>
 
-    <section v-else class="grid min-w-0 gap-5 lg:grid-cols-[1fr_19rem]">
-      <div class="min-w-0 space-y-4">
-        <article
-          v-for="post in moments"
-          :key="post.id"
-          class="app-panel overflow-hidden p-4 sm:p-5"
-        >
-          <div
-            class="mb-3 flex items-center gap-2 text-xs text-base-content/70"
-          >
-            <div class="inline-flex items-center gap-1.5">
-              <img
-                v-if="getPublisherPicture(post)"
-                :src="getPublisherPicture(post)"
-                :alt="post.publisher.name"
-                class="h-4 w-4 rounded-full object-cover"
-                loading="lazy"
-              />
-              <span class="opacity-70">{{
-                post.publisher.nick || post.publisher.name
-              }}</span>
-            </div>
-            <span>{{ formatDate(post.publishedAt || post.createdAt) }}</span>
-            <span>{{ post.viewsUnique }} 次阅读</span>
-          </div>
-
-          <NuxtLink
-            :to="getMomentPostUrl(post)"
-            class="block hover:no-underline"
-          >
-            <h2
-              v-if="post.title"
-              class="text-base font-bold leading-snug text-base-content/90"
+    <section v-else class="grid min-w-0 gap-6 lg:grid-cols-[1fr_19rem]">
+      <div class="min-w-0">
+        <div class="masonry">
+          <template v-for="item in galleryItems" :key="item.key">
+            <NuxtLink
+              :to="getMomentPostUrl(item.post)"
+              class="masonry-item group"
             >
-              {{ post.title }}
-            </h2>
-
-            <article
-              v-if="renderedMoments[post.id]?.description"
-              class="prose-goatshed mt-2 max-w-none text-sm leading-6 text-base-content/80"
-              v-html="renderedMoments[post.id].description"
-            />
-
-            <article
-              v-if="renderedMoments[post.id]?.content"
-              class="prose-goatshed mt-2 max-w-none text-sm leading-6 text-base-content/85"
-              v-html="renderedMoments[post.id].content"
-            />
-          </NuxtLink>
-
-          <div
-            v-if="postImages(post).length > 0"
-            class="mt-3 rounded-lg bg-base-200/50 p-2"
-          >
-            <div
-              v-if="postImages(post).length === 1"
-              class="overflow-hidden rounded-lg"
-            >
-              <img
-                :src="postImages(post)[0].src"
-                :alt="postImages(post)[0].alt"
-                class="max-h-[480px] w-auto mx-auto"
-                :style="{ viewTransitionName: `moment-img-${post.id}` }"
-                loading="lazy"
-              />
-            </div>
-            <div
-              v-else
-              class="carousel-group relative"
-              @touchstart="onTouchStart($event, post.id)"
-              @touchmove="onTouchMove($event, post.id)"
-              @touchend="onTouchEnd(post.id, postImages(post).length)"
-            >
-              <div class="carousel-container overflow-hidden rounded-lg">
-                <div
-                  class="flex transition-transform duration-300 ease-out"
-                  :style="{
-                    transform: `translateX(-${carouselIndex[post.id] * 100}%)`,
-                  }"
-                >
-                  <div
-                    v-for="(img, idx) in postImages(post)"
-                    :key="idx"
-                    class="w-full flex-shrink-0"
+              <div class="masonry-card">
+                <div class="masonry-img-wrap">
+                  <img
+                    :src="item.src"
+                    :alt="item.alt"
+                    class="masonry-img"
+                    :style="{
+                      ...(item.isFirst ? { viewTransitionName: `moment-img-${item.post.id}` } : {}),
+                      ...(item.width && item.height ? { aspectRatio: `${item.width} / ${item.height}` } : {}),
+                    }"
+                    loading="lazy"
                   >
-                    <img
-                      :src="img.src"
-                      :alt="img.alt"
-                      class="max-h-[480px] w-auto mx-auto"
-                      :style="idx === 0 ? { viewTransitionName: `moment-img-${post.id}` } : undefined"
-                      loading="lazy"
-                    />
+                  <div v-if="item.totalImages > 1 && item.imageIndex === 0" class="masonry-count">
+                    {{ item.totalImages }}
+                  </div>
+                  <div class="masonry-overlay">
+                    <div class="masonry-overlay-content">
+                      <div class="flex items-center gap-1.5">
+                        <img
+                          v-if="getPublisherPicture(item.post)"
+                          :src="getPublisherPicture(item.post)"
+                          :alt="item.post.publisher.name"
+                          class="h-4 w-4 rounded-full object-cover ring-1 ring-white/20"
+                          loading="lazy"
+                        >
+                        <span class="text-xs font-medium text-white/90">
+                          {{ item.post.publisher.nick || item.post.publisher.name }}
+                        </span>
+                      </div>
+                      <h3
+                        v-if="item.post.title"
+                        class="mt-1.5 text-sm font-bold leading-snug text-white line-clamp-2"
+                      >
+                        {{ item.post.title }}
+                      </h3>
+                      <p
+                        v-else-if="renderedMoments[item.post.id]?.description"
+                        class="mt-1.5 text-xs leading-relaxed text-white/80 line-clamp-2"
+                        v-html="renderedMoments[item.post.id].description"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-              <button
-                v-show="carouselIndex[post.id] > 0"
-                class="carousel-arrow carousel-arrow-left"
-                @click="carouselIndex[post.id]--"
-              >
-                <ChevronLeft class="h-4 w-4" />
-              </button>
-              <button
-                v-show="carouselIndex[post.id] < postImages(post).length - 1"
-                class="carousel-arrow carousel-arrow-right"
-                @click="carouselIndex[post.id]++"
-              >
-                <ChevronRight class="h-4 w-4" />
-              </button>
-              <div class="carousel-progress">
-                <div class="carousel-progress-track">
-                  <div
-                    class="carousel-progress-bar"
-                    :style="{ width: `${((carouselIndex[post.id] + 1) / postImages(post).length) * 100}%` }"
+            </NuxtLink>
+
+            <NuxtLink
+              v-if="item.isFirst && item.textOnly"
+              :to="getMomentPostUrl(item.post)"
+              class="masonry-item group"
+            >
+              <div class="masonry-card">
+                <div class="masonry-text-card">
+                  <div class="flex items-center gap-1.5 mb-2">
+                    <img
+                      v-if="getPublisherPicture(item.post)"
+                      :src="getPublisherPicture(item.post)"
+                      :alt="item.post.publisher.name"
+                      class="h-4 w-4 rounded-full object-cover"
+                      loading="lazy"
+                    >
+                    <span class="text-xs text-base-content/60">
+                      {{ item.post.publisher.nick || item.post.publisher.name }}
+                    </span>
+                  </div>
+                  <h3
+                    v-if="item.post.title"
+                    class="text-sm font-bold leading-snug text-base-content/90 line-clamp-2"
+                  >
+                    {{ item.post.title }}
+                  </h3>
+                  <article
+                    v-if="renderedMoments[item.post.id]?.description"
+                    class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
+                    v-html="renderedMoments[item.post.id].description"
                   />
+                  <article
+                    v-else-if="renderedMoments[item.post.id]?.content"
+                    class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
+                    v-html="renderedMoments[item.post.id].content"
+                  />
+                  <span class="mt-2 text-[10px] text-base-content/40">
+                    {{ formatDate(item.post.publishedAt || item.post.createdAt) }}
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
-        </article>
+            </NuxtLink>
+          </template>
+        </div>
 
-        <div class="flex justify-center py-3">
+        <div class="flex justify-center py-6">
           <button
             v-if="hasMore"
             class="btn btn-outline btn-sm"
@@ -180,7 +157,6 @@ import {
 import type { Post, PostListResponse } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
 import { getPostIdentifier } from "~/utils/post";
-import { ChevronLeft, ChevronRight } from "lucide-vue-next";
 
 const route = useRoute();
 const router = useRouter();
@@ -202,44 +178,105 @@ const error = ref<string | null>(null);
 const renderedMoments = ref<
   Record<string, { description: string; content: string }>
 >({});
-const carouselIndex = ref<Record<string, number>>({});
-
-const touchState = ref<Record<string, { startX: number; startY: number; dx: number; tracking: boolean }>>({});
-
-function onTouchStart(e: TouchEvent, postId: string) {
-  const t = e.touches[0];
-  touchState.value[postId] = { startX: t.clientX, startY: t.clientY, dx: 0, tracking: true };
-}
-
-function onTouchMove(e: TouchEvent, postId: string) {
-  const state = touchState.value[postId];
-  if (!state?.tracking) return;
-  const t = e.touches[0];
-  state.dx = t.clientX - state.startX;
-  if (Math.abs(t.clientY - state.startY) > Math.abs(state.dx)) {
-    state.tracking = false;
-  }
-}
-
-function onTouchEnd(postId: string, total: number) {
-  const state = touchState.value[postId];
-  if (!state?.tracking) return;
-  state.tracking = false;
-  const threshold = 40;
-  if (state.dx < -threshold && carouselIndex.value[postId] < total - 1) {
-    carouselIndex.value[postId]++;
-  } else if (state.dx > threshold && carouselIndex.value[postId] > 0) {
-    carouselIndex.value[postId]--;
-  }
-}
 
 const hasMore = computed(() => moments.value.length < total.value);
+
+function postImages(post: Post) {
+  const images: { src: string; alt: string; width?: number; height?: number }[] = [];
+
+  if (post.picture?.id) {
+    images.push({
+      src:
+        post.picture.url ||
+        `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.picture.id)}`,
+      alt: post.title || "动态图片",
+      width: post.picture.width ?? undefined,
+      height: post.picture.height ?? undefined,
+    });
+  }
+
+  if (post.attachments?.length) {
+    for (const att of post.attachments) {
+      if (att.id && att.mimeType?.startsWith("image/")) {
+        images.push({
+          src:
+            att.url ||
+            `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(att.id)}`,
+          alt: att.name || post.title || "动态图片",
+          width: att.width ?? undefined,
+          height: att.height ?? undefined,
+        });
+      }
+    }
+  }
+
+  if (images.length === 0 && post.background?.id) {
+    images.push({
+      src:
+        post.background.url ||
+        `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.background.id)}`,
+      alt: post.title || "动态图片",
+      width: post.background.width ?? undefined,
+      height: post.background.height ?? undefined,
+    });
+  }
+
+  return images;
+}
+
+interface GalleryItem {
+  key: string;
+  post: Post;
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  imageIndex: number;
+  totalImages: number;
+  isFirst: boolean;
+  textOnly: boolean;
+}
+
+const galleryItems = computed<GalleryItem[]>(() => {
+  const items: GalleryItem[] = [];
+  for (const post of moments.value) {
+    const images = postImages(post);
+    if (images.length === 0) {
+      items.push({
+        key: `post-${post.id}-text`,
+        post,
+        src: "",
+        alt: "",
+        imageIndex: 0,
+        totalImages: 0,
+        isFirst: true,
+        textOnly: true,
+      });
+    } else {
+      for (let i = 0; i < images.length; i++) {
+        items.push({
+          key: `post-${post.id}-img-${i}`,
+          post,
+          src: images[i].src,
+          alt: images[i].alt,
+          width: images[i].width,
+          height: images[i].height,
+          imageIndex: i,
+          totalImages: images.length,
+          isFirst: i === 0,
+          textOnly: false,
+        });
+      }
+    }
+  }
+  return items;
+});
 
 function queryParams(nextOffset: number) {
   return {
     pub: activePub.value,
     type: 0,
-    take: 12,
+    take: 24,
     offset: nextOffset,
   };
 }
@@ -311,43 +348,6 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
-function postImages(post: Post) {
-  const images: { src: string; alt: string }[] = [];
-
-  if (post.picture?.id) {
-    images.push({
-      src:
-        post.picture.url ||
-        `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.picture.id)}`,
-      alt: post.title || "动态图片",
-    });
-  }
-
-  if (post.attachments?.length) {
-    for (const att of post.attachments) {
-      if (att.id && att.mimeType?.startsWith("image/")) {
-        images.push({
-          src:
-            att.url ||
-            `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(att.id)}`,
-          alt: att.name || post.title || "动态图片",
-        });
-      }
-    }
-  }
-
-  if (images.length === 0 && post.background?.id) {
-    images.push({
-      src:
-        post.background.url ||
-        `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.background.id)}`,
-      alt: post.title || "动态图片",
-    });
-  }
-
-  return images;
-}
-
 function getMomentPostUrl(post: Post) {
   const identifier = getPostIdentifier(post);
   return `/moments/${identifier}`;
@@ -389,69 +389,108 @@ useHead({
 </script>
 
 <style scoped>
-.carousel-group {
+.masonry {
+  columns: 2;
+  column-gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .masonry {
+    columns: 3;
+    column-gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry {
+    columns: 3;
+    column-gap: 1rem;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 0.75rem;
+  display: block;
+  text-decoration: none;
+}
+
+@media (min-width: 640px) {
+  .masonry-item {
+    margin-bottom: 1rem;
+  }
+}
+
+.masonry-card {
+  overflow: hidden;
+  border-radius: var(--radius-box, 0.9rem);
+  border: 1px solid color-mix(in srgb, var(--color-base-300) 70%, transparent);
+  background: var(--color-base-100);
+  transition: box-shadow 200ms ease;
+}
+
+.masonry-card:hover {
+  box-shadow: 0 4px 24px oklch(0 0 0 / 0.08);
+}
+
+.masonry-img-wrap {
   position: relative;
-}
-
-.carousel-arrow {
-  position: absolute;
-  top: 50%;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  background: oklch(0.2 0 0 / 0.55);
-  color: oklch(1 0 0 / 0.9);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transform: translateY(-50%) scale(0.85);
-  transition: opacity 200ms ease, transform 200ms ease;
-  pointer-events: none;
-  cursor: pointer;
-  border: none;
-}
-
-.carousel-group:hover .carousel-arrow {
-  opacity: 1;
-  transform: translateY(-50%) scale(1);
-  pointer-events: auto;
-}
-
-.carousel-arrow:active {
-  transform: translateY(-50%) scale(0.92);
-}
-
-.carousel-arrow-left {
-  left: 0.5rem;
-}
-
-.carousel-arrow-right {
-  right: 0.5rem;
-}
-
-.carousel-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  padding: 0.375rem 0.75rem;
-}
-
-.carousel-progress-track {
-  height: 3px;
-  border-radius: 9999px;
-  background: oklch(0 0 0 / 0.12);
   overflow: hidden;
 }
 
-.carousel-progress-bar {
-  height: 100%;
+.masonry-img {
+  width: 100%;
+  display: block;
+  transition: transform 300ms ease;
+}
+
+.masonry-card:hover .masonry-img {
+  transform: scale(1.03);
+}
+
+.masonry-count {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.375rem;
   border-radius: 9999px;
-  background: var(--color-primary);
-  transition: width 300ms ease-out;
+  background: oklch(0 0 0 / 0.5);
+  color: oklch(1 0 0 / 0.9);
+  font-size: 0.65rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.masonry-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: linear-gradient(
+    to top,
+    oklch(0 0 0 / 0.6) 0%,
+    oklch(0 0 0 / 0.2) 40%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.masonry-card:hover .masonry-overlay {
+  opacity: 1;
+}
+
+.masonry-overlay-content {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+.masonry-text-card {
+  padding: 0.875rem;
 }
 </style>
