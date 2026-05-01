@@ -1,178 +1,154 @@
 <template>
-  <main class="page-shell mx-auto py-8" data-pagefind-body>
-    <ShellBreadcrumb :path="`/moments/${postIdentifier}`" />
-
-    <div v-if="pending" class="flex justify-center py-16">
+  <main class="moment-view" data-pagefind-body>
+    <div v-if="pending" class="flex h-dvh items-center justify-center">
       <span class="loading loading-spinner loading-lg" />
     </div>
 
-    <div v-else-if="error" class="alert alert-error">
-      <span>{{ error.message }}</span>
+    <div v-else-if="error" class="flex h-dvh items-center justify-center px-4">
+      <div class="alert alert-error max-w-md">
+        <span>{{ error.message }}</span>
+      </div>
     </div>
 
     <template v-else-if="post">
-      <section class="mb-6">
-        <div class="flex items-center gap-2 text-xs text-base-content/65">
-          <span class="badge badge-soft badge-primary badge-sm">{{ post.publisher.name }}</span>
-          <span>{{ publishedAt }}</span>
-          <span v-if="post.viewsUnique">{{ post.viewsUnique }} 次阅读</span>
-        </div>
+      <header class="moment-header">
+        <button class="btn btn-ghost btn-sm gap-1.5" @click="goBack">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          动态
+        </button>
+      </header>
 
-        <h1 v-if="post.title" class="mt-2 text-xl font-bold leading-tight sm:text-2xl">
-          {{ post.title }}
-        </h1>
-      </section>
-
-      <div v-if="postImages.length > 0" class="moment-grid">
-        <div class="moment-images">
-          <div class="sticky top-24">
-            <div v-if="postImages.length === 1" class="overflow-hidden rounded-lg bg-base-200/50 p-2">
-              <img
-                :src="postImages[0].src"
-                :alt="postImages[0].alt"
-                class="max-h-[60vh] w-auto mx-auto"
-                loading="lazy"
+      <div class="moment-layout">
+        <div class="moment-media">
+          <div v-if="postImages.length === 1" class="moment-media-inner">
+            <img
+              :src="postImages[0].src"
+              :alt="postImages[0].alt"
+              class="moment-img"
+              :style="{ viewTransitionName: `moment-img-${post.id}` }"
+              loading="lazy"
+            >
+          </div>
+          <div v-else-if="postImages.length > 1" ref="swipeTarget" class="carousel-group moment-media-inner">
+            <div class="carousel-container h-full overflow-hidden">
+              <div
+                class="flex h-full transition-transform duration-300 ease-out"
+                :style="{ transform: `translateX(-${carouselIndex * 100}%)` }"
               >
-            </div>
-            <div v-else class="group relative rounded-lg bg-base-200/50 p-2">
-              <div class="carousel-container overflow-hidden rounded-lg">
                 <div
-                  class="flex transition-transform duration-300 ease-out"
-                  :style="{ transform: `translateX(-${carouselIndex * 100}%)` }"
+                  v-for="(img, idx) in postImages"
+                  :key="idx"
+                  class="flex h-full w-full flex-shrink-0 items-center justify-center"
                 >
-                  <div
-                    v-for="(img, idx) in postImages"
-                    :key="idx"
-                    class="w-full flex-shrink-0"
+                  <img
+                    :src="img.src"
+                    :alt="img.alt"
+                    class="moment-img"
+                    :style="idx === 0 ? { viewTransitionName: `moment-img-${post.id}` } : undefined"
+                    loading="lazy"
                   >
-                    <img
-                      :src="img.src"
-                      :alt="img.alt"
-                      class="max-h-[60vh] w-auto mx-auto"
-                      loading="lazy"
-                    >
-                  </div>
                 </div>
               </div>
-              <button
-                v-if="carouselIndex > 0"
-                class="absolute left-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm btn-neutral opacity-0 group-hover:opacity-100 transition-opacity"
-                @click="carouselIndex--"
+            </div>
+            <button
+              v-show="carouselIndex > 0"
+              class="carousel-arrow carousel-arrow-left"
+              @click="carouselIndex--"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              v-show="carouselIndex < postImages.length - 1"
+              class="carousel-arrow carousel-arrow-right"
+              @click="carouselIndex++"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <div class="carousel-progress">
+              <div class="carousel-progress-track">
+                <div
+                  class="carousel-progress-bar"
+                  :style="{ width: `${((carouselIndex + 1) / postImages.length) * 100}%` }"
+                />
+              </div>
+            </div>
+          </div>
+          <div v-else class="moment-media-inner flex items-center justify-center bg-base-200/30">
+            <span class="text-base-content/30 text-6xl">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="moment-detail">
+          <div class="moment-detail-inner">
+            <div class="mb-4 flex items-center gap-2 text-xs text-base-content/70">
+              <div class="inline-flex items-center gap-1.5">
+                <img
+                  v-if="publisherPictureUrl"
+                  :src="publisherPictureUrl"
+                  :alt="post.publisher.name"
+                  class="h-4 w-4 rounded-full object-cover"
+                  loading="lazy"
+                >
+                <span class="opacity-70">{{ post.publisher.nick || post.publisher.name }}</span>
+              </div>
+              <span>{{ publishedAt }}</span>
+              <span v-if="post.viewsUnique">{{ post.viewsUnique }} 次阅读</span>
+            </div>
+
+            <h1 v-if="post.title" class="mb-4 text-lg font-bold leading-tight sm:text-xl">
+              {{ post.title }}
+            </h1>
+
+            <article
+              v-if="renderedDescription"
+              class="prose-goatshed max-w-none text-sm leading-6 text-base-content/80 mb-4"
+              v-html="renderedDescription"
+            />
+            <article
+              id="article"
+              class="prose-goatshed max-w-none"
+              v-html="renderedContent"
+            />
+
+            <div
+              class="post-divider relative my-8 flex items-center justify-center gap-4"
+              aria-hidden="true"
+            >
+              <div
+                class="relative h-px flex-1 bg-linear-to-r from-transparent via-base-300/40 to-primary/30"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                v-if="carouselIndex < postImages.length - 1"
-                class="absolute right-4 top-1/2 -translate-y-1/2 btn btn-circle btn-sm btn-neutral opacity-0 group-hover:opacity-100 transition-opacity"
-                @click="carouselIndex++"
+                <div
+                  class="absolute inset-0 bg-linear-to-r from-transparent via-primary/35 to-primary/35 blur-[2px]"
+                />
+              </div>
+              <div
+                class="relative z-10 flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary/50 select-none"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <div class="mt-2 flex justify-center gap-1.5">
-                <button
-                  v-for="(_, idx) in postImages"
-                  :key="idx"
-                  class="h-2 w-2 rounded-full transition-colors"
-                  :class="carouselIndex === idx ? 'bg-primary' : 'bg-base-content/20'"
-                  @click="carouselIndex = idx"
+                <span
+                  class="h-1.5 w-1.5 rounded-full bg-primary/60 shadow-[0_0_8px_var(--color-primary)]"
+                />
+                结束
+              </div>
+              <div
+                class="relative h-px flex-1 bg-linear-to-l from-transparent via-base-300/40 to-primary/30"
+              >
+                <div
+                  class="absolute inset-0 bg-linear-to-l from-transparent via-primary/35 to-primary/35 blur-[2px]"
                 />
               </div>
             </div>
           </div>
         </div>
-
-        <div class="moment-content min-w-0">
-          <article
-            v-if="renderedDescription"
-            class="prose-goatshed max-w-none text-sm leading-6 text-base-content/80 mb-4"
-            v-html="renderedDescription"
-          />
-          <article
-            id="article"
-            class="prose-goatshed max-w-none"
-            v-html="renderedContent"
-          />
-        </div>
-      </div>
-
-      <div v-else class="moment-content-centered">
-        <article
-          v-if="renderedDescription"
-          class="prose-goatshed max-w-none text-sm leading-6 text-base-content/80 mb-4"
-          v-html="renderedDescription"
-        />
-        <article
-          id="article"
-          class="prose-goatshed max-w-none"
-          v-html="renderedContent"
-        />
-      </div>
-
-      <div
-        class="post-divider relative mb-8 mt-12 flex items-center justify-center gap-4"
-        aria-hidden="true"
-      >
-        <div
-          class="relative h-px flex-1 bg-linear-to-r from-transparent via-base-300/40 to-primary/30"
-        >
-          <div
-            class="absolute inset-0 bg-linear-to-r from-transparent via-primary/35 to-primary/35 blur-[2px]"
-          />
-        </div>
-        <div
-          class="relative z-10 flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary/50 select-none"
-        >
-          <span
-            class="h-1.5 w-1.5 rounded-full bg-primary/60 shadow-[0_0_8px_var(--color-primary)]"
-          />
-          结束
-        </div>
-        <div
-          class="relative h-px flex-1 bg-linear-to-l from-transparent via-base-300/40 to-primary/30"
-        >
-          <div
-            class="absolute inset-0 bg-linear-to-l from-transparent via-primary/35 to-primary/35 blur-[2px]"
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 mt-10" data-pagefind-ignore>
-        <NuxtLink
-          v-if="prevPost"
-          :to="`/moments/${prevPostIdentifier}`"
-          class="post-nav-link group relative flex flex-col gap-1 rounded-2xl border border-base-300/30 px-5 py-4 transition-all duration-300 hover:border-primary/40"
-        >
-          <div class="post-nav-bg" />
-          <div class="flex items-center gap-1.5">
-            <span class="text-[10px] uppercase tracking-wider text-base-content/45">上一篇</span>
-          </div>
-          <span
-            class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary"
-          >
-            {{ prevPost.title || "无标题动态" }}
-          </span>
-        </NuxtLink>
-        <div v-else />
-
-        <NuxtLink
-          v-if="nextPost"
-          :to="`/moments/${nextPostIdentifier}`"
-          class="post-nav-link group relative col-start-2 flex flex-col items-end gap-1 rounded-2xl border border-base-300/30 px-5 py-4 text-end transition-all duration-300 hover:border-primary/40"
-        >
-          <div class="post-nav-bg" />
-          <div class="flex items-center gap-1.5">
-            <span class="text-[10px] uppercase tracking-wider text-base-content/45">下一篇</span>
-          </div>
-          <span
-            class="line-clamp-2 text-sm leading-snug font-medium text-base-content/80 transition-colors duration-200 group-hover:text-primary"
-          >
-            {{ nextPost.title || "无标题动态" }}
-          </span>
-        </NuxtLink>
       </div>
     </template>
   </main>
@@ -183,9 +159,19 @@ import type { Post } from "~/types/post";
 import { renderMarkdown } from "~/utils/markdown";
 import { getPostIdentifier } from "~/utils/post";
 
+definePageMeta({ layout: "blank" });
+
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    navigateTo(`/moments/${activePub.value}`);
+  }
+}
 
 const activePub = computed(() => {
   const pub = route.params.pub;
@@ -211,26 +197,26 @@ const {
   $fetch<Post>(`/api/posts/${postApiId.value}`),
 );
 
-const { data: prevPost } = await useAsyncData(
-  `moment-${postApiId.value}-prev`,
-  () => $fetch<Post | null>(`/api/posts/${postApiId.value}/prev`),
-);
-
-const { data: nextPost } = await useAsyncData(
-  `moment-${postApiId.value}-next`,
-  () => $fetch<Post | null>(`/api/posts/${postApiId.value}/next`),
-);
-
 watchEffect(() => {
   if (post.value?.type === 1) {
     const identifier = getPostIdentifier(post.value);
-    router.replace(`/posts/${identifier}`);
+    navigateTo(`/posts/${identifier}`, { replace: true });
   }
 });
 
 const renderedContent = ref("");
 const renderedDescription = ref("");
 const carouselIndex = ref(0);
+const swipeTarget = ref<HTMLElement | null>(null);
+
+useSwipe(swipeTarget, {
+  onSwipeLeft: () => {
+    if (carouselIndex.value < postImages.value.length - 1) carouselIndex.value++;
+  },
+  onSwipeRight: () => {
+    if (carouselIndex.value > 0) carouselIndex.value--;
+  },
+});
 
 watch(
   () => post.value,
@@ -259,26 +245,18 @@ const postIdentifier = computed(() =>
   post.value ? getPostIdentifier(post.value) : "",
 );
 
-const prevPostIdentifier = computed(() =>
-  prevPost.value ? getPostIdentifier(prevPost.value) : "",
-);
-
-const nextPostIdentifier = computed(() =>
-  nextPost.value ? getPostIdentifier(nextPost.value) : "",
-);
-
 const postImages = computed(() => {
   if (!post.value) return [];
-  
+
   const images: { src: string; alt: string }[] = [];
-  
+
   if (post.value.picture?.id) {
     images.push({
       src: post.value.picture.url || `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.value.picture.id)}`,
       alt: post.value.title || "动态图片",
     });
   }
-  
+
   if (post.value.attachments?.length) {
     for (const att of post.value.attachments) {
       if (att.id && att.mimeType?.startsWith("image/")) {
@@ -289,20 +267,29 @@ const postImages = computed(() => {
       }
     }
   }
-  
+
   if (images.length === 0 && post.value.background?.id) {
     images.push({
       src: post.value.background.url || `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(post.value.background.id)}`,
       alt: post.value.title || "动态图片",
     });
   }
-  
+
   return images;
+});
+
+const publisherPictureUrl = computed(() => {
+  const pic = post.value?.publisher?.picture;
+  if (!pic?.id) return null;
+  return (
+    pic.url ||
+    `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(pic.id)}`
+  );
 });
 
 const postOgImage = computed(() => {
   if (!post.value) return "https://littlesheep.me/og-image.png";
-  
+
   const pic = post.value.picture;
   if (pic?.id) {
     return pic.url || `${config.public.apiBaseUrl}/drive/files/${encodeURIComponent(pic.id)}`;
@@ -361,64 +348,145 @@ useHead(() => ({
 </script>
 
 <style scoped>
-.moment-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
+.moment-view {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (min-width: 1024px) {
-  .moment-grid {
-    grid-template-columns: minmax(280px, 40%) 1fr;
-  }
+.moment-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  padding: 0.75rem 1rem;
 }
 
-.moment-images {
-  min-width: 0;
+.moment-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
-.moment-content {
-  min-width: 0;
+.moment-media {
+  position: relative;
+  flex: 1 1 60%;
+  min-height: 0;
+  background: var(--color-base-200);
+  overflow: hidden;
 }
 
-.moment-content-centered {
-  max-width: 52rem;
-  margin-inline: auto;
+.moment-media-inner {
+  position: absolute;
+  inset: 0;
 }
 
-.post-divider {
-  max-width: 52rem;
-  margin-inline: auto;
+.moment-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.post-nav-link {
-  background: color-mix(in srgb, var(--color-base-300) 8%, transparent);
+.carousel-group {
   position: relative;
 }
 
-.post-nav-bg {
+.carousel-arrow {
   position: absolute;
-  inset: -1px;
-  opacity: 0.4;
-  transition: opacity 0.35s ease;
-  background:
-    radial-gradient(
-      ellipse 80% 60% at 20% 80%,
-      color-mix(in oklab, var(--color-primary) 12%, transparent) 0%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 60% 70% at 80% 20%,
-      color-mix(in oklab, var(--color-primary) 8%, transparent) 0%,
-      transparent 60%
-    );
-  filter: blur(16px);
+  top: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: oklch(0.2 0 0 / 0.55);
+  color: oklch(1 0 0 / 0.9);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-50%) scale(0.85);
+  transition: opacity 200ms ease, transform 200ms ease;
   pointer-events: none;
-  z-index: -1;
-  border-radius: inherit;
+  cursor: pointer;
+  border: none;
 }
 
-.post-nav-link:hover .post-nav-bg {
+.carousel-group:hover .carousel-arrow {
   opacity: 1;
+  transform: translateY(-50%) scale(1);
+  pointer-events: auto;
+}
+
+.carousel-arrow:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.carousel-arrow-left {
+  left: 0.75rem;
+}
+
+.carousel-arrow-right {
+  right: 0.75rem;
+}
+
+.carousel-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+}
+
+.carousel-progress-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: oklch(1 0 0 / 0.25);
+  overflow: hidden;
+}
+
+.carousel-progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background: oklch(1 0 0 / 0.85);
+  transition: width 300ms ease-out;
+}
+
+.moment-detail {
+  flex: 1 1 40%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.moment-detail-inner {
+  padding: 1.25rem 1rem 2rem;
+}
+
+.post-divider {
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .moment-layout {
+    flex-direction: row;
+  }
+
+  .moment-media {
+    flex: 1 1 55%;
+  }
+
+  .moment-detail {
+    flex: 0 0 45%;
+    max-width: 32rem;
+  }
+
+  .moment-detail-inner {
+    padding: 2rem 2rem 3rem;
+  }
 }
 </style>

@@ -87,10 +87,17 @@
                 :src="postImages(post)[0].src"
                 :alt="postImages(post)[0].alt"
                 class="max-h-[480px] w-auto mx-auto"
+                :style="{ viewTransitionName: `moment-img-${post.id}` }"
                 loading="lazy"
               />
             </div>
-            <div v-else class="group relative">
+            <div
+              v-else
+              class="carousel-group relative"
+              @touchstart="onTouchStart($event, post.id)"
+              @touchmove="onTouchMove($event, post.id)"
+              @touchend="onTouchEnd(post.id, postImages(post).length)"
+            >
               <div class="carousel-container overflow-hidden rounded-lg">
                 <div
                   class="flex transition-transform duration-300 ease-out"
@@ -107,63 +114,37 @@
                       :src="img.src"
                       :alt="img.alt"
                       class="max-h-[480px] w-auto mx-auto"
+                      :style="idx === 0 ? { viewTransitionName: `moment-img-${post.id}` } : undefined"
                       loading="lazy"
                     />
                   </div>
                 </div>
               </div>
               <button
-                v-if="carouselIndex[post.id] > 0"
-                class="absolute left-2 top-1/2 -translate-y-1/2 btn btn-circle btn-sm btn-neutral opacity-0 group-hover:opacity-100 transition-opacity"
+                v-show="carouselIndex[post.id] > 0"
+                class="carousel-arrow carousel-arrow-left"
                 @click="carouselIndex[post.id]--"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 19l-7-7 7-7"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
-                v-if="carouselIndex[post.id] < postImages(post).length - 1"
-                class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-circle btn-sm btn-neutral opacity-0 group-hover:opacity-100 transition-opacity"
+                v-show="carouselIndex[post.id] < postImages(post).length - 1"
+                class="carousel-arrow carousel-arrow-right"
                 @click="carouselIndex[post.id]++"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-              <div class="mt-2 flex justify-center gap-1.5">
-                <button
-                  v-for="(_, idx) in postImages(post)"
-                  :key="idx"
-                  class="h-2 w-2 rounded-full transition-colors"
-                  :class="
-                    carouselIndex[post.id] === idx
-                      ? 'bg-primary'
-                      : 'bg-base-content/20'
-                  "
-                  @click="carouselIndex[post.id] = idx"
-                />
+              <div class="carousel-progress">
+                <div class="carousel-progress-track">
+                  <div
+                    class="carousel-progress-bar"
+                    :style="{ width: `${((carouselIndex[post.id] + 1) / postImages(post).length) * 100}%` }"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -225,6 +206,35 @@ const renderedMoments = ref<
   Record<string, { description: string; content: string }>
 >({});
 const carouselIndex = ref<Record<string, number>>({});
+
+const touchState = ref<Record<string, { startX: number; startY: number; dx: number; tracking: boolean }>>({});
+
+function onTouchStart(e: TouchEvent, postId: string) {
+  const t = e.touches[0];
+  touchState.value[postId] = { startX: t.clientX, startY: t.clientY, dx: 0, tracking: true };
+}
+
+function onTouchMove(e: TouchEvent, postId: string) {
+  const state = touchState.value[postId];
+  if (!state?.tracking) return;
+  const t = e.touches[0];
+  state.dx = t.clientX - state.startX;
+  if (Math.abs(t.clientY - state.startY) > Math.abs(state.dx)) {
+    state.tracking = false;
+  }
+}
+
+function onTouchEnd(postId: string, total: number) {
+  const state = touchState.value[postId];
+  if (!state?.tracking) return;
+  state.tracking = false;
+  const threshold = 40;
+  if (state.dx < -threshold && carouselIndex.value[postId] < total - 1) {
+    carouselIndex.value[postId]++;
+  } else if (state.dx > threshold && carouselIndex.value[postId] > 0) {
+    carouselIndex.value[postId]--;
+  }
+}
 
 const hasMore = computed(() => moments.value.length < total.value);
 
@@ -380,3 +390,71 @@ useHead({
   ],
 });
 </script>
+
+<style scoped>
+.carousel-group {
+  position: relative;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: oklch(0.2 0 0 / 0.55);
+  color: oklch(1 0 0 / 0.9);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(-50%) scale(0.85);
+  transition: opacity 200ms ease, transform 200ms ease;
+  pointer-events: none;
+  cursor: pointer;
+  border: none;
+}
+
+.carousel-group:hover .carousel-arrow {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+  pointer-events: auto;
+}
+
+.carousel-arrow:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.carousel-arrow-left {
+  left: 0.5rem;
+}
+
+.carousel-arrow-right {
+  right: 0.5rem;
+}
+
+.carousel-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: 0.375rem 0.75rem;
+}
+
+.carousel-progress-track {
+  height: 3px;
+  border-radius: 9999px;
+  background: oklch(0 0 0 / 0.12);
+  overflow: hidden;
+}
+
+.carousel-progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  transition: width 300ms ease-out;
+}
+</style>
