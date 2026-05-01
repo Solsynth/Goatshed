@@ -1,5 +1,5 @@
 <template>
-  <main class="page-shell min-w-0 py-8">
+  <main class="moments-page min-w-0 py-8">
     <ShellBreadcrumb :path="`/moments/${activePub}`" />
 
     <section class="mb-6">
@@ -27,101 +27,97 @@
 
     <section v-else class="grid min-w-0 gap-6 lg:grid-cols-[1fr_19rem]">
       <div class="min-w-0">
-        <div class="masonry">
-          <template v-for="item in galleryItems" :key="item.key">
+        <MasonryWall
+          :items="galleryItems"
+          :column-width="280"
+          :gap="16"
+          :ssr-columns="3"
+          :key-mapper="(item) => item.key"
+        >
+          <template #default="{ item }">
             <NuxtLink
               :to="getMomentPostUrl(item.post)"
-              class="masonry-item group"
+              class="masonry-card group"
             >
-              <div class="masonry-card">
-                <div class="masonry-img-wrap">
-                  <img
-                    :src="item.src"
-                    :alt="item.alt"
-                    class="masonry-img"
-                    :style="{
-                      ...(item.isFirst ? { viewTransitionName: `moment-img-${item.post.id}` } : {}),
-                      ...(item.width && item.height ? { aspectRatio: `${item.width} / ${item.height}` } : {}),
-                    }"
-                    loading="lazy"
-                  >
-                  <div v-if="item.totalImages > 1 && item.imageIndex === 0" class="masonry-count">
-                    {{ item.totalImages }}
-                  </div>
-                  <div class="masonry-overlay">
-                    <div class="masonry-overlay-content">
-                      <div class="flex items-center gap-1.5">
-                        <img
-                          v-if="getPublisherPicture(item.post)"
-                          :src="getPublisherPicture(item.post)"
-                          :alt="item.post.publisher.name"
-                          class="h-4 w-4 rounded-full object-cover ring-1 ring-white/20"
-                          loading="lazy"
-                        >
-                        <span class="text-xs font-medium text-white/90">
-                          {{ item.post.publisher.nick || item.post.publisher.name }}
-                        </span>
-                      </div>
-                      <h3
-                        v-if="item.post.title"
-                        class="mt-1.5 text-sm font-bold leading-snug text-white line-clamp-2"
+              <div v-if="!item.textOnly" class="masonry-img-wrap">
+                <img
+                  :src="item.src"
+                  :alt="item.alt"
+                  class="masonry-img"
+                  :style="{
+                    ...(item.isFirst ? { viewTransitionName: `moment-img-${item.post.id}` } : {}),
+                    ...(item.width && item.height ? { aspectRatio: `${item.width} / ${item.height}` } : {}),
+                  }"
+                  loading="lazy"
+                >
+                <div v-if="item.totalImages > 1 && item.imageIndex === 0" class="masonry-count">
+                  {{ item.totalImages }}
+                </div>
+                <div class="masonry-overlay">
+                  <div class="masonry-overlay-content">
+                    <div class="flex items-center gap-1.5">
+                      <img
+                        v-if="getPublisherPicture(item.post)"
+                        :src="getPublisherPicture(item.post)"
+                        :alt="item.post.publisher.name"
+                        class="h-4 w-4 rounded-full object-cover ring-1 ring-white/20"
+                        loading="lazy"
                       >
-                        {{ item.post.title }}
-                      </h3>
-                      <p
-                        v-else-if="renderedMoments[item.post.id]?.description"
-                        class="mt-1.5 text-xs leading-relaxed text-white/80 line-clamp-2"
-                        v-html="renderedMoments[item.post.id].description"
-                      />
+                      <span class="text-xs font-medium text-white/90">
+                        {{ item.post.publisher.nick || item.post.publisher.name }}
+                      </span>
                     </div>
+                    <h3
+                      v-if="item.post.title"
+                      class="mt-1.5 text-sm font-bold leading-snug text-white line-clamp-2"
+                    >
+                      {{ item.post.title }}
+                    </h3>
+                    <p
+                      v-else-if="renderedMoments[item.post.id]?.description"
+                      class="mt-1.5 text-xs leading-relaxed text-white/80 line-clamp-2"
+                      v-html="renderedMoments[item.post.id].description"
+                    />
                   </div>
                 </div>
               </div>
-            </NuxtLink>
 
-            <NuxtLink
-              v-if="item.isFirst && item.textOnly"
-              :to="getMomentPostUrl(item.post)"
-              class="masonry-item group"
-            >
-              <div class="masonry-card">
-                <div class="masonry-text-card">
-                  <div class="flex items-center gap-1.5 mb-2">
-                    <img
-                      v-if="getPublisherPicture(item.post)"
-                      :src="getPublisherPicture(item.post)"
-                      :alt="item.post.publisher.name"
-                      class="h-4 w-4 rounded-full object-cover"
-                      loading="lazy"
-                    >
-                    <span class="text-xs text-base-content/60">
-                      {{ item.post.publisher.nick || item.post.publisher.name }}
-                    </span>
-                  </div>
-                  <h3
-                    v-if="item.post.title"
-                    class="text-sm font-bold leading-snug text-base-content/90 line-clamp-2"
+              <div v-else class="masonry-text-card">
+                <div class="flex items-center gap-1.5 mb-2">
+                  <img
+                    v-if="getPublisherPicture(item.post)"
+                    :src="getPublisherPicture(item.post)"
+                    :alt="item.post.publisher.name"
+                    class="h-4 w-4 rounded-full object-cover"
+                    loading="lazy"
                   >
-                    {{ item.post.title }}
-                  </h3>
-                  <article
-                    v-if="renderedMoments[item.post.id]?.description"
-                    class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
-                    v-html="renderedMoments[item.post.id].description"
-                  />
-                  <article
-                    v-else-if="renderedMoments[item.post.id]?.content"
-                    class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
-                    v-html="renderedMoments[item.post.id].content"
-                  />
-                  <span class="mt-2 text-[10px] text-base-content/40">
-                    {{ formatDate(item.post.publishedAt || item.post.createdAt) }}
+                  <span class="text-xs text-base-content/60">
+                    {{ item.post.publisher.nick || item.post.publisher.name }}
                   </span>
                 </div>
+                <h3
+                  v-if="item.post.title"
+                  class="text-sm font-bold leading-snug text-base-content/90 line-clamp-2"
+                >
+                  {{ item.post.title }}
+                </h3>
+                <article
+                  v-if="renderedMoments[item.post.id]?.description"
+                  class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
+                  v-html="renderedMoments[item.post.id].description"
+                />
+                <article
+                  v-else-if="renderedMoments[item.post.id]?.content"
+                  class="prose-goatshed mt-1.5 max-w-none text-xs leading-relaxed text-base-content/70 line-clamp-4"
+                  v-html="renderedMoments[item.post.id].content"
+                />
+                <span class="mt-2 text-[10px] text-base-content/40">
+                  {{ formatDate(item.post.publishedAt || item.post.createdAt) }}
+                </span>
               </div>
             </NuxtLink>
           </template>
-        </div>
+        </MasonryWall>
 
         <div class="flex justify-center py-6">
           <button
@@ -149,6 +145,7 @@
 </template>
 
 <script setup lang="ts">
+import { MasonryWall } from "@yeger/vue-masonry-wall";
 import {
   PUBLISHERS,
   isPublisherName,
@@ -389,43 +386,31 @@ useHead({
 </script>
 
 <style scoped>
-.masonry {
-  columns: 2;
-  column-gap: 0.75rem;
+.moments-page {
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
 }
 
 @media (min-width: 640px) {
-  .masonry {
-    columns: 3;
-    column-gap: 1rem;
+  .moments-page {
+    padding-inline: 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .masonry {
-    columns: 3;
-    column-gap: 1rem;
-  }
-}
-
-.masonry-item {
-  break-inside: avoid;
-  margin-bottom: 0.75rem;
-  display: block;
-  text-decoration: none;
-}
-
-@media (min-width: 640px) {
-  .masonry-item {
-    margin-bottom: 1rem;
+  .moments-page {
+    padding-inline: 2rem;
   }
 }
 
 .masonry-card {
+  display: block;
   overflow: hidden;
   border-radius: var(--radius-box, 0.9rem);
   border: 1px solid color-mix(in srgb, var(--color-base-300) 70%, transparent);
   background: var(--color-base-100);
+  text-decoration: none;
   transition: box-shadow 200ms ease;
 }
 

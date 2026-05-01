@@ -22,6 +22,7 @@
     "@nuxt/eslint": "1.15.2",
     "@nuxt/image": "2.0.0",
     "@shikijs/markdown-it": "^3.23.0",
+    "@yeger/vue-masonry-wall": "^6.1.1",
     "ai": "^6.0.170",
     "lucide-vue-next": "^1.0.0",
     "markdown-it": "^14.1.1",
@@ -34,8 +35,8 @@
     "zod": "^4.4.1"
   },
   "devDependencies": {
-    "daisyui": "^5.5.19",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.2.4"
+    "@tailwindcss/vite": "^4.2.4",
+    "daisyui": "^5.5.19"
   }
 }
