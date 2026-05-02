@@ -74,6 +74,13 @@ export default defineNuxtConfig({
           content: "https://littlesheep.me/og-image.png",
         },
       ],
+      script: [
+        {
+          defer: true,
+          src: "https://cloud.umami.is/script.js",
+          "data-website-id": "43beabf3-549a-44ac-add8-8d64229c01e5",
+        },
+      ],
       link: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         {
