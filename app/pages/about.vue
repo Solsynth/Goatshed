@@ -137,10 +137,6 @@
           <House class="link-icon" />
           <span>主页</span>
         </NuxtLink>
-        <NuxtLink to="/clone" class="link-card">
-          <Bot class="link-icon" />
-          <span>数字分身</span>
-        </NuxtLink>
         <NuxtLink to="/posts?page=0&pub=littlesheep" class="link-card">
           <FileText class="link-icon" />
           <span>博客</span>
@@ -155,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { Bot, FileText, House, NotebookText } from "lucide-vue-next";
+import { FileText, House, NotebookText } from "lucide-vue-next";
 import type { Publisher } from "~/types/publisher";
 
 const config = useRuntimeConfig();

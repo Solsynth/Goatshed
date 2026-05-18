@@ -34,11 +34,11 @@ export default defineNuxtConfig({
         {
           name: "description",
           content:
-            "A stylish personal blog and digital clone powered by Solar Network.",
+            "A stylish personal blog powered by Solar Network.",
         },
         {
           name: "keywords",
-          content: "littlesheep, blog, developer, Solar Network, 数字分身",
+          content: "littlesheep, blog, developer, Solar Network",
         },
         { name: "author", content: "littlesheep" },
         { name: "theme-color", content: "#6366f1" },
@@ -51,7 +51,7 @@ export default defineNuxtConfig({
         {
           property: "og:description",
           content:
-            "A stylish personal blog and digital clone powered by Solar Network.",
+            "A stylish personal blog powered by Solar Network.",
         },
         {
           property: "og:image",
@@ -67,7 +67,7 @@ export default defineNuxtConfig({
         {
           name: "twitter:description",
           content:
-            "A stylish personal blog and digital clone powered by Solar Network.",
+            "A stylish personal blog powered by Solar Network.",
         },
         {
           name: "twitter:image",

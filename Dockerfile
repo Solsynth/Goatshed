@@ -6,7 +6,6 @@ COPY package.json ./
 RUN npm install
 
 ENV NITRO_DATA_DIR=/data/nitro
-ENV MASTRA_DB_PATH=/data/mastra.db
 
 COPY . .
 RUN npm run build
@@ -25,7 +24,6 @@ ENV NODE_ENV=production
 ENV NUXT_HOST=0.0.0.0
 ENV NUXT_PORT=3000
 
-ENV MASTRA_DB_PATH=/data/mastra.db
 ENV NITRO_DATA_DIR=/data/nitro
 
 RUN mkdir -p /data && chown -R nuxt:nodejs /data
