@@ -1,7 +1,7 @@
 import type { H3Event } from "h3";
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
-import { account, user } from "../db/index";
+import { account, user } from "~~/server/db/index";
 import { auth } from "./auth";
 
 const PROFILE_TTL_MS = 24 * 60 * 60 * 1000;

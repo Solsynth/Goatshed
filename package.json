@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxt/eslint": "1.15.2",
     "@nuxt/image": "2.0.0",
+    "@pinia/nuxt": "^0.11.3",
     "@shikijs/markdown-it": "^3.23.0",
     "@yeger/vue-masonry-wall": "^6.1.1",
     "better-auth": "^1.6.23",
@@ -21,6 +22,8 @@
     "nuxt": "^4.4.4",
     "nuxt-shiki": "0.3.2",
     "pg": "^8.22.0",
+    "pinia": "^3.0.4",
+    "reka-ui": "^2.10.1",
     "shiki": "^3.23.0",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6"

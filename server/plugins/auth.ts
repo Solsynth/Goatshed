@@ -1,6 +1,6 @@
-import { auth } from "../utils/auth";
-import { db } from "../utils/db";
-import { user as userTable } from "../db/index";
+import { auth } from "~~/server/utils/auth";
+import { db } from "~~/server/utils/db";
+import { user as userTable } from "~~/server/db/index";
 import { eq } from "drizzle-orm";
 
 const ADMIN_REFRESH_INTERVAL = 60 * 60 * 1000;

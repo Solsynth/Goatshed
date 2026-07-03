@@ -1,4 +1,4 @@
-import { floatingFetch } from "../../utils/floating-api";
+import { snFetch } from "~~/server/utils/sn-api";
 
 export default defineEventHandler(async (event) => {
   const name = getRouterParam(event, "name");
@@ -6,5 +6,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Missing publisher name" });
   }
 
-  return floatingFetch(event, `/sphere/publishers/${encodeURIComponent(name)}`);
+  return snFetch(event, `/sphere/publishers/${encodeURIComponent(name)}`);
 });

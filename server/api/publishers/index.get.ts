@@ -1,5 +1,5 @@
-import type { Publisher } from "../../../app/types/publisher";
-import { floatingFetch } from "../../utils/floating-api";
+import type { Publisher } from "~/types/publisher";
+import { snFetch } from "~~/server/utils/sn-api";
 
 interface CachedPublishers {
   data: Record<string, Publisher>;
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const entries = await Promise.all(
     PUBLISHER_NAMES.map(async (name) => {
       try {
-        const publisher = await floatingFetch<Publisher>(
+        const publisher = await snFetch<Publisher>(
           event,
           `/sphere/publishers/${encodeURIComponent(name)}`,
         );

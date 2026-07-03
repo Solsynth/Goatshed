@@ -1,7 +1,7 @@
-import type { Post } from "../../app/types/post";
-import { isPublisherName } from "../../app/constants/publishers";
-import { floatingFetchWithTotal } from "../utils/floating-api";
-import { getSolarToken } from "../utils/solarProfile";
+import type { Post } from "~/types/post";
+import { isPublisherName } from "~/constants/publishers";
+import { snFetchWithTotal } from "~~/server/utils/sn-api";
+import { getSolarToken } from "~~/server/utils/solarProfile";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
 
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     orderDesc: "true",
   });
 
-  const result = await floatingFetchWithTotal<Post[]>(
+  const result = await snFetchWithTotal<Post[]>(
     event,
     `/sphere/posts?${params.toString()}`,
     { token: token ?? undefined },

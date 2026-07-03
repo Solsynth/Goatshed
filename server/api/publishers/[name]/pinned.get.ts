@@ -1,5 +1,5 @@
-import type { Post } from "../../../../app/types/post";
-import { floatingFetch } from "../../../utils/floating-api";
+import type { Post } from "~/types/post";
+import { snFetch } from "~~/server/utils/sn-api";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
 
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  return floatingFetch<Post[]>(
+  return snFetch<Post[]>(
     event,
     `/sphere/posts?pub=${encodeURIComponent(name)}&pinned=true&type=1&take=5`,
   );

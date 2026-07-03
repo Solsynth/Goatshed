@@ -5,7 +5,7 @@ const nitroDataDir = process.env.NITRO_DATA_DIR?.trim() || ".data";
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/image", "@nuxt/eslint", "nuxt-shiki"],
+  modules: ["@pinia/nuxt", "@nuxt/image", "@nuxt/eslint", "nuxt-shiki"],
   shiki: {
     dynamic: true,
     bundledLangs: ["cpp"],

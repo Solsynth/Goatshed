@@ -46,6 +46,16 @@
           </li>
           <li>
             <NuxtLink
+              to="/store"
+              class="nav-link inline-flex items-center gap-1.5"
+              active-class="nav-link-active"
+            >
+              <ShoppingBag class="h-4 w-4" />
+              商店
+            </NuxtLink>
+          </li>
+          <li>
+            <NuxtLink
               to="/about"
               class="nav-link inline-flex items-center gap-1.5"
               active-class="nav-link-active"
@@ -102,6 +112,16 @@
             </li>
             <li>
               <NuxtLink
+to="/store"
+                class="inline-flex items-center gap-2"
+                active-class="bg-base-200 text-primary"
+              >
+                <ShoppingBag class="h-4 w-4" />
+                商店
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
                 to="/about"
                 class="inline-flex items-center gap-2"
                 active-class="bg-base-200 text-primary"
@@ -118,6 +138,12 @@
                 <NuxtLink to="/me" class="inline-flex items-center gap-2">
                   <User class="h-4 w-4" />
                   {{ auth.user.value.name }}
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink to="/orders" class="inline-flex items-center gap-2">
+                  <Receipt class="h-4 w-4" />
+                  我的订单
                 </NuxtLink>
               </li>
               <li>
@@ -165,6 +191,9 @@
                 <NuxtLink to="/me" @click="closeMenu">我的账户</NuxtLink>
               </li>
               <li>
+                <NuxtLink to="/orders" @click="closeMenu">我的订单</NuxtLink>
+              </li>
+              <li>
                 <button @click="handleLogout">退出登录</button>
               </li>
             </ul>
@@ -194,6 +223,8 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Receipt,
+  ShoppingBag,
   User,
 } from "lucide-vue-next";
 

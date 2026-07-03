@@ -1,13 +1,13 @@
-import { snakeToCamel } from "../../app/utils/case";
+import { snakeToCamel } from "~/utils/case";
 
-interface ApiFetchOptions extends RequestInit {
+interface SnApiFetchOptions extends RequestInit {
   token?: string;
 }
 
-export async function floatingFetch<T>(
+export async function snFetch<T>(
   event: Parameters<typeof useRuntimeConfig>[0],
   path: string,
-  options: ApiFetchOptions = {},
+  options: SnApiFetchOptions = {},
 ): Promise<T> {
   const config = useRuntimeConfig(event);
   const baseUrl = config.public.apiBaseUrl;
@@ -21,13 +21,22 @@ export async function floatingFetch<T>(
     headers.set("authorization", `Bearer ${options.token}`);
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
+  const url = `${baseUrl}${path}`;
+  const response = await fetch(url, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
     const text = await response.text();
+    console.error("[snFetch] Request failed:", {
+      url,
+      method: options.method || "GET",
+      headers: Object.fromEntries(headers.entries()),
+      body: options.body,
+      status: response.status,
+      response: text,
+    });
     throw createError({
       statusCode: response.status,
       message: text || `Request failed: ${response.status}`,
@@ -42,10 +51,10 @@ export async function floatingFetch<T>(
   return snakeToCamel<T>(data);
 }
 
-export async function floatingFetchWithTotal<T>(
+export async function snFetchWithTotal<T>(
   event: Parameters<typeof useRuntimeConfig>[0],
   path: string,
-  options: ApiFetchOptions = {},
+  options: SnApiFetchOptions = {},
 ): Promise<{ data: T; total: number }> {
   const config = useRuntimeConfig(event);
   const headers = new Headers(options.headers || {});
@@ -61,6 +70,14 @@ export async function floatingFetchWithTotal<T>(
 
   if (!response.ok) {
     const text = await response.text();
+    console.error("[snFetchWithTotal] Request failed:", {
+      url: `${config.public.apiBaseUrl}${path}`,
+      method: options.method || "GET",
+      headers: Object.fromEntries(headers.entries()),
+      body: options.body,
+      status: response.status,
+      response: text,
+    });
     throw createError({
       statusCode: response.status,
       message: text || `Request failed: ${response.status}`,

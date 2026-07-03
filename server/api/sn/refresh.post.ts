@@ -1,4 +1,4 @@
-import { getCachedSolarProfile } from "../../utils/solarProfile";
+import { getCachedSolarProfile } from "~~/server/utils/solarProfile";
 
 export default defineEventHandler(async (event) => {
   const session = event.context.session;

@@ -1,4 +1,6 @@
-import { pgTable, text, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, jsonb, index, integer, decimal, pgEnum } from "drizzle-orm/pg-core";
+
+export const orderStatus = pgEnum("order_status", ["待支付", "已支付", "已完成", "已取消"]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -52,3 +54,24 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
 }, (table) => [index("verification_identifier_idx").on(table.identifier)]);
+
+export const orders = pgTable("orders", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    orderId: text("order_id").notNull().unique(),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    productType: text("product_type").notNull().default("donation"),
+    amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+    currency: text("currency").notNull(),
+    quantity: integer("quantity").notNull().default(1),
+    remarks: text("remarks"),
+    status: orderStatus("status").notNull().default("待支付"),
+    paidAt: timestamp("paid_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+    index("orders_orderId_idx").on(table.orderId),
+    index("orders_userId_idx").on(table.userId),
+    index("orders_status_idx").on(table.status),
+    index("orders_paidAt_idx").on(table.paidAt),
+    index("orders_productType_idx").on(table.productType),
+]);

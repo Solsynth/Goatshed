@@ -1,7 +1,7 @@
-import type { Post } from "../../../app/types/post";
-import { floatingFetch } from "../../utils/floating-api";
-import { getSolarToken } from "../../utils/solarProfile";
-import { isPublisherName } from "../../../app/constants/publishers";
+import type { Post } from "~/types/post";
+import { snFetch } from "~~/server/utils/sn-api";
+import { getSolarToken } from "~~/server/utils/solarProfile";
+import { isPublisherName } from "~/constants/publishers";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
 
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   const postId = isUuid(lastSegment) ? lastSegment : id;
 
-  const post = await floatingFetch<Post>(event, `/sphere/posts/${postId}`, {
+  const post = await snFetch<Post>(event, `/sphere/posts/${postId}`, {
     token: token ?? undefined,
   });
 
@@ -62,7 +62,7 @@ async function getNavigationPost(
   const session = event.context.session;
   const token = session ? await getSolarToken(session.user.id) : null;
 
-  const currentPost = await floatingFetch<Post>(event, `/sphere/posts/${id}`, {
+  const currentPost = await snFetch<Post>(event, `/sphere/posts/${id}`, {
     token: token ?? undefined,
   });
 
@@ -100,7 +100,7 @@ async function getNavigationPost(
     }
   }
 
-  const result = await floatingFetch<Post[]>(
+  const result = await snFetch<Post[]>(
     event,
     `/sphere/posts?${cleanParams.toString()}`,
     { token: token ?? undefined },

@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "../../utils/db";
-import { account } from "../../db/index";
+import { db } from "~~/server/utils/db";
+import { account } from "~~/server/db/index";
 
 export default defineEventHandler(async (event) => {
   const session = event.context.session;

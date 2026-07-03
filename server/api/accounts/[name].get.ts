@@ -1,8 +1,8 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "../../utils/db";
-import { account } from "../../db/index";
-import { getSolarToken } from "../../utils/solarProfile";
-import { floatingFetch } from "../../utils/floating-api";
+import { db } from "~~/server/utils/db";
+import { account } from "~~/server/db/index";
+import { getSolarToken } from "~~/server/utils/solarProfile";
+import { snFetch } from "~~/server/utils/sn-api";
 
 export default defineEventHandler(async (event) => {
   const name = getRouterParam(event, "name");
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
   const token = await getSolarTokenFromSession(event);
 
-  return floatingFetch<Record<string, any>>(
+  return snFetch<Record<string, any>>(
     event,
     `/passport/accounts/${encodeURIComponent(name)}`,
     { token: token ?? undefined },
@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 });
 
 async function getSolarTokenFromSession(event: any): Promise<string | null> {
-  const { auth } = await import("../../utils/auth");
+  const { auth } = await import("~~/server/utils/auth");
   const session = await auth.api.getSession({ headers: event.headers });
   if (!session) return null;
   return await getSolarToken(session.user.id);

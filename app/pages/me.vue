@@ -87,7 +87,35 @@
                     </p>
                 </div>
 
+                <div class="rounded-box border border-base-300 bg-base-100">
+                    <div class="p-2">
+                        <NuxtLink
+                            to="/orders"
+                            class="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-base-200"
+                        >
+                            <Receipt class="h-5 w-5 text-primary" />
+                            <span class="flex-1 text-primary font-medium">我的订单</span>
+                            <ChevronRight class="h-4 w-4 text-base-content/50" />
+                        </NuxtLink>
+                    </div>
+                </div>
+
                 <div class="mt-4 space-y-3">
+                    <div v-if="isAdmin" class="rounded-box border border-base-300 bg-base-100">
+                        <div class="p-2">
+                            <NuxtLink
+                                to="/admin"
+                                class="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-base-200"
+                            >
+                                <Shield class="h-5 w-5 text-primary" />
+                                <span class="flex-1 text-primary font-medium">管理面板</span>
+                                <ChevronRight
+                                    class="h-4 w-4 text-base-content/50"
+                                />
+                            </NuxtLink>
+                        </div>
+                    </div>
+
                     <div class="rounded-box border border-base-300 bg-base-100">
                         <div class="p-2">
                             <NuxtLink
@@ -238,6 +266,7 @@
 <script setup lang="ts">
 import {
     User,
+    Shield,
     ShieldCheck,
     ChevronRight,
     Mail,
@@ -248,8 +277,8 @@ import {
     LogOut,
     Loader2,
     RefreshCw,
+    Receipt,
 } from "lucide-vue-next";
-
 definePageMeta({
     middleware: ["auth"],
 });
@@ -270,6 +299,14 @@ const { data: profile } = await useFetch<Record<string, any> | null>(
         headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
     },
 );
+const { data: roleData } = await useFetch<{ isAdmin: boolean }>(
+    "/api/auth/role",
+    {
+        default: () => ({ isAdmin: false }),
+        headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
+    },
+);
+const isAdmin = computed(() => roleData.value?.isAdmin ?? false);
 
 const displayName = computed(() => {
     if (!session.value) return "未知用户";
