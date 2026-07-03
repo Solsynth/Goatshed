@@ -45,8 +45,13 @@
               </p>
             </div>
 
-            <button class="btn btn-primary w-full gap-2" @click="startLogin">
-              <LogIn class="h-4 w-4" />
+            <button
+              class="btn btn-primary w-full gap-2"
+              :disabled="isLoading"
+              @click="startLogin"
+            >
+              <Loader2 v-if="isLoading" class="h-4 w-4 animate-spin" />
+              <LogIn v-else class="h-4 w-4" />
               使用 {{ providerName }} 继续
             </button>
 
@@ -71,21 +76,31 @@
 </template>
 
 <script setup lang="ts">
-import { LogIn } from "lucide-vue-next";
+import { LogIn, Loader2 } from "lucide-vue-next";
 
 definePageMeta({
   layout: false,
 });
 
 const route = useRoute();
-const auth = useAuth();
 const config = useRuntimeConfig();
+const auth = useAuth();
 
 const providerName = computed(() => config.public.oauthProviderName || "OAuth");
+const isLoading = ref(false);
 
-function startLogin() {
-  const next = typeof route.query.next === "string" ? route.query.next : "/me";
-  auth.login(next);
+async function startLogin() {
+  isLoading.value = true;
+  try {
+    const next = typeof route.query.next === "string" ? route.query.next : "/me";
+    const callbackURL = new URL(next, useRequestURL().origin).toString();
+    await auth.signIn.social({
+      provider: "solian",
+      callbackURL,
+    });
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 useHead({ title: "登录" });

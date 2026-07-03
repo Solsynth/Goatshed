@@ -117,13 +117,13 @@
               <li>
                 <NuxtLink to="/me" class="inline-flex items-center gap-2">
                   <User class="h-4 w-4" />
-                  {{ auth.user.value.nick || auth.user.value.name }}
+                  {{ auth.user.value.name }}
                 </NuxtLink>
               </li>
               <li>
                 <button
                   class="inline-flex items-center gap-2 text-error"
-                  @click="auth.logout"
+                  @click="handleLogout"
                 >
                   <LogOut class="h-4 w-4" />
                   退出登录
@@ -142,7 +142,7 @@
         </div>
 
         <template v-if="auth.authenticated.value && auth.user.value">
-          <details class="dropdown dropdown-end hidden md:block">
+          <details ref="userMenu" class="dropdown dropdown-end hidden md:block">
             <summary
               class="list-none flex items-center gap-2 rounded-box sm:px-3 cursor-pointer"
             >
@@ -162,10 +162,10 @@
               class="menu dropdown-content mt-2 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow-sm z-50"
             >
               <li>
-                <NuxtLink to="/me">我的账户</NuxtLink>
+                <NuxtLink to="/me" @click="closeMenu">我的账户</NuxtLink>
               </li>
               <li>
-                <button @click="auth.logout">退出登录</button>
+                <button @click="handleLogout">退出登录</button>
               </li>
             </ul>
           </details>
@@ -199,10 +199,22 @@ import {
 
 const auth = useAuth();
 const config = useRuntimeConfig();
+const userMenu = ref<HTMLDetailsElement>();
 
-const avatarUrl = computed(() => {
-  const username = auth.user.value?.username || auth.user.value?.name;
-  if (!username) return "";
-  return `${config.public.apiBaseUrl}/passport/accounts/${encodeURIComponent(username)}/picture`;
+const { data: avatarData } = await useFetch<{ avatarUrl: string | null }>("/api/sn/avatar", {
+  key: () => `avatar-${auth.user.value?.id ?? "anon"}`,
+  default: () => ({ avatarUrl: null }),
+  headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
 });
+
+const avatarUrl = computed(() => avatarData.value?.avatarUrl ?? "");
+
+function closeMenu() {
+  if (userMenu.value) userMenu.value.open = false;
+}
+
+async function handleLogout() {
+  closeMenu();
+  await auth.logout();
+}
 </script>

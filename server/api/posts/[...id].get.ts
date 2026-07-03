@@ -1,6 +1,6 @@
 import type { Post } from "../../../app/types/post";
 import { floatingFetch } from "../../utils/floating-api";
-import { readSession } from "../../utils/session";
+import { getSolarToken } from "../../utils/solarProfile";
 import { isPublisherName } from "../../../app/constants/publishers";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
@@ -17,23 +17,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const segments = id.split("/");
-  const lastSegment = segments[segments.length - 1];
+  const lastSegment = segments.at(-1)!;
 
   if (lastSegment === "prev" || lastSegment === "next") {
     const postPath = segments.slice(0, -1).join("/");
     const pathSegments = postPath.split("/");
-    const pathLastSegment = pathSegments[pathSegments.length - 1];
+    const pathLastSegment = pathSegments.at(-1)!;
     const postId = isUuid(pathLastSegment) ? pathLastSegment : postPath;
     return await getNavigationPost(event, postId, lastSegment);
   }
 
-  const session = await readSession(event);
-  const token = session?.accessToken;
+  const session = event.context.session;
+  const token = session ? await getSolarToken(session.user.id) : null;
 
   const postId = isUuid(lastSegment) ? lastSegment : id;
 
   const post = await floatingFetch<Post>(event, `/sphere/posts/${postId}`, {
-    token,
+    token: token ?? undefined,
   });
 
   if (
@@ -59,11 +59,11 @@ async function getNavigationPost(
   const pubParam = typeof query.pub === "string" ? query.pub : undefined;
   const typeParam = query.type !== undefined ? Number(query.type) : undefined;
 
-  const session = await readSession(event);
-  const token = session?.accessToken;
+  const session = event.context.session;
+  const token = session ? await getSolarToken(session.user.id) : null;
 
   const currentPost = await floatingFetch<Post>(event, `/sphere/posts/${id}`, {
-    token,
+    token: token ?? undefined,
   });
 
   if (!currentPost?.publishedAt || !currentPost?.publisher?.name) {
@@ -93,7 +93,6 @@ async function getNavigationPost(
     publishedAfter: direction === "next" ? currentPost.publishedAt : undefined,
   } as any);
 
-  // Remove undefined params
   const cleanParams = new URLSearchParams();
   for (const [key, value] of params.entries()) {
     if (value && value !== "undefined") {
@@ -104,7 +103,7 @@ async function getNavigationPost(
   const result = await floatingFetch<Post[]>(
     event,
     `/sphere/posts?${cleanParams.toString()}`,
-    { token },
+    { token: token ?? undefined },
   );
   return result[0] || null;
 }

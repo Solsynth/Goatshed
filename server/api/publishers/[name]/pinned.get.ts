@@ -1,6 +1,5 @@
 import type { Post } from "../../../../app/types/post";
 import { floatingFetch } from "../../../utils/floating-api";
-import { readSession } from "../../../utils/session";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
 
@@ -11,7 +10,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (LOCKED_PUBLISHERS.has(name)) {
-    const session = await readSession(event);
+    const session = event.context.session;
     if (!session) {
       throw createError({
         statusCode: 401,

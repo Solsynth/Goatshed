@@ -1,44 +1,43 @@
-import type { SessionUser } from "~/types/auth";
-
-interface SessionResponse {
-  authenticated: boolean;
-  user: SessionUser | null;
-}
+import { createAuthClient } from "better-auth/vue";
 
 export function useAuth() {
-  const user = useState<SessionUser | null>("auth-user", () => null);
-  const authenticated = computed(() => Boolean(user.value));
+  const url = useRequestURL();
+  const headers = import.meta.server ? useRequestHeaders(["cookie"]) : undefined;
+  const client = createAuthClient({
+    baseURL: url.origin,
+    fetchOptions: { headers },
+  });
 
-  async function refreshSession() {
-    try {
-      const session = await $fetch<SessionResponse>("/api/auth/session", {
-        headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
-      });
-      user.value = session.user;
-      return session;
-    } catch {
-      user.value = null;
-      return { authenticated: false, user: null } satisfies SessionResponse;
-    }
-  }
+  const sessionState = client.useSession();
+  const session = computed(() => sessionState.value?.data ?? null);
+  const user = computed(() => sessionState.value?.data?.user ?? null);
+  const authenticated = computed(() => Boolean(sessionState.value?.data));
 
   function login(next = "/me") {
-    return navigateTo(`/api/auth/login?next=${encodeURIComponent(next)}`, {
-      external: true,
-    });
+    return navigateTo(`/login?next=${encodeURIComponent(next)}`);
   }
 
   async function logout() {
-    await $fetch("/api/auth/logout", { method: "POST" });
-    user.value = null;
-    await navigateTo("/");
+    await client.signOut();
   }
 
   return {
+    client,
+    session,
     user,
     authenticated,
-    refreshSession,
     login,
     logout,
+    useSession: client.useSession,
+    signIn: client.signIn,
+    signOut: client.signOut,
   };
+}
+
+export function useServerSession() {
+  if (!import.meta.server) {
+    throw new Error("useServerSession can only be used on the server");
+  }
+  const event = useRequestEvent()!;
+  return event.context.session || null;
 }

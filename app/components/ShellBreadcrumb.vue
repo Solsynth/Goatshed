@@ -43,9 +43,14 @@ const props = defineProps<{
 
 const auth = useAuth();
 
+const { data: avatarData } = await useFetch<{ name: string }>("/api/sn/avatar", {
+  key: () => `avatar-${auth.user.value?.id ?? "anon"}`,
+  default: () => ({ name: "" }),
+  headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
+});
+
 const username = computed(() => {
-  const user = auth.user.value;
-  return user?.username || user?.name || "guest";
+  return avatarData.value?.name || auth.user.value?.name || "guest";
 });
 
 const pathSegments = computed(() => {

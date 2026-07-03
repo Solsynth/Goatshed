@@ -14,10 +14,13 @@
     "@nuxt/image": "2.0.0",
     "@shikijs/markdown-it": "^3.23.0",
     "@yeger/vue-masonry-wall": "^6.1.1",
+    "better-auth": "^1.6.23",
+    "drizzle-orm": "^0.45.2",
     "lucide-vue-next": "^1.0.0",
     "markdown-it": "^14.1.1",
     "nuxt": "^4.4.4",
     "nuxt-shiki": "0.3.2",
+    "pg": "^8.22.0",
     "shiki": "^3.23.0",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6"
@@ -25,6 +28,8 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.4",
-    "daisyui": "^5.5.19"
+    "@types/pg": "^8.20.0",
+    "daisyui": "^5.5.19",
+    "drizzle-kit": "^0.31.10"
   }
 }

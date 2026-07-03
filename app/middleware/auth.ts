@@ -1,9 +1,13 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const auth = useAuth();
-  if (auth.authenticated.value) return;
-
-  const session = await auth.refreshSession();
-  if (session.authenticated) return;
-
-  return navigateTo(`/login?next=${encodeURIComponent(to.fullPath)}`);
+  if (import.meta.server) {
+    const session = await useServerSession();
+    if (!session) {
+      return navigateTo({ path: "/login", query: { next: to.fullPath } });
+    }
+  } else {
+    const { data: session } = await useAuth().useSession(useFetch);
+    if (!session.value) {
+      return navigateTo({ path: "/login", query: { next: to.fullPath } });
+    }
+  }
 });

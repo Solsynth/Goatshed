@@ -1,7 +1,7 @@
 import type { Post } from "../../app/types/post";
 import { isPublisherName } from "../../app/constants/publishers";
 import { floatingFetchWithTotal } from "../utils/floating-api";
-import { readSession } from "../utils/session";
+import { getSolarToken } from "../utils/solarProfile";
 
 const LOCKED_PUBLISHERS = new Set(["littlesheepuwu"]);
 
@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
   const requestedType = Number(query.type);
   const type = requestedType === 0 ? 0 : 1;
 
-  const session = await readSession(event);
-  const token = session?.accessToken;
+  const session = event.context.session;
+  const token = session ? await getSolarToken(session.user.id) : null;
 
   if (LOCKED_PUBLISHERS.has(pub) && !session) {
     throw createError({
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   const result = await floatingFetchWithTotal<Post[]>(
     event,
     `/sphere/posts?${params.toString()}`,
-    { token },
+    { token: token ?? undefined },
   );
 
   return {

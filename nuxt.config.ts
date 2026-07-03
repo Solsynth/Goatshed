@@ -103,16 +103,8 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    authSessionSecret: "replace-this-in-production",
-    oauthClientSecret: "",
     public: {
       apiBaseUrl: "https://api.solian.app",
-      oauthClientId: "",
-      oauthAuthorizeUrl: "https://id.solian.app/auth/authorize",
-      oauthTokenUrl: "https://api.solian.app/padlock/auth/open/token",
-      oauthUserInfoUrl: "https://api.solian.app/padlock/auth/open/userinfo",
-      oauthRedirectUrl: "",
-      oauthScope: "openid profile email",
       oauthProviderName: "Solarpass",
     },
   },

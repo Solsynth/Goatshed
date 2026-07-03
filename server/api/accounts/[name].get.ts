@@ -1,6 +1,8 @@
-import type { Account } from "../../../app/types/account";
+import { eq, and } from "drizzle-orm";
+import { db } from "../../utils/db";
+import { account } from "../../db/index";
+import { getSolarToken } from "../../utils/solarProfile";
 import { floatingFetch } from "../../utils/floating-api";
-import { readSession } from "../../utils/session";
 
 export default defineEventHandler(async (event) => {
   const name = getRouterParam(event, "name");
@@ -8,12 +10,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Missing account name" });
   }
 
-  const session = await readSession(event);
-  const token = session?.accessToken;
+  const token = await getSolarTokenFromSession(event);
 
-  return floatingFetch<Account>(
+  return floatingFetch<Record<string, any>>(
     event,
     `/passport/accounts/${encodeURIComponent(name)}`,
-    { token },
+    { token: token ?? undefined },
   );
 });
+
+async function getSolarTokenFromSession(event: any): Promise<string | null> {
+  const { auth } = await import("../../utils/auth");
+  const session = await auth.api.getSession({ headers: event.headers });
+  if (!session) return null;
+  return await getSolarToken(session.user.id);
+}
