@@ -1,6 +1,7 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "~~/server/utils/db";
-import { gamingSession, sessionParticipant, orders } from "~~/server/db/index";
+import { gamingSession, sessionParticipant } from "~~/server/db/index";
+import { getUserTicketBalance } from "~~/server/utils/tickets";
 
 export default defineEventHandler(async (event) => {
   const authSession = event.context.session;
@@ -30,30 +31,12 @@ export default defineEventHandler(async (event) => {
 
   if (existing) throw createError({ statusCode: 409, statusMessage: "Already joined" });
 
-  const [ticketCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.userId, authSession.user.id),
-        eq(orders.productType, "gaming"),
-        eq(orders.status, "已支付"),
-      ),
-    );
+  const balance = await getUserTicketBalance(db, authSession.user.id);
 
-  const totalTickets = ticketCount?.count || 0;
-
-  const [usedTickets] = await db
-    .select({ count: sql<number>`coalesce(sum(${sessionParticipant.ticketsUsed}), 0)::int` })
-    .from(sessionParticipant)
-    .where(eq(sessionParticipant.userId, authSession.user.id));
-
-  const availableTickets = totalTickets - (usedTickets?.count || 0);
-
-  if (availableTickets < gs.ticketCost) {
+  if (balance.available < gs.ticketCost) {
     throw createError({
       statusCode: 400,
-      statusMessage: `票不够，需要 ${gs.ticketCost} 张，你只有 ${availableTickets} 张`,
+      statusMessage: `票不够，需要 ${gs.ticketCost} 张，你只有 ${balance.available} 张`,
     });
   }
 

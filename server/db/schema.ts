@@ -102,4 +102,31 @@ export const sessionParticipant = pgTable("session_participant", {
     index("session_participant_userId_idx").on(table.userId),
 ]);
 
+export const mahjongSession = pgTable("mahjong_session", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    description: text("description"),
+    playerCount: integer("player_count").notNull().default(4),
+    initialPoints: integer("initial_points").notNull().default(25000),
+    ticketValue: integer("ticket_value").notNull().default(100),
+    multiplier: integer("multiplier").notNull().default(1),
+    status: text("status").default("upcoming"),
+    createdBy: text("created_by").notNull().references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+    index("mahjong_session_createdBy_idx").on(table.createdBy),
+]);
+
+export const mahjongParticipant = pgTable("mahjong_participant", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    sessionId: text("session_id").notNull().references(() => mahjongSession.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    ticketsUsed: integer("tickets_used").notNull().default(1),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+}, (table) => [
+    index("mahjong_participant_sessionId_idx").on(table.sessionId),
+    index("mahjong_participant_userId_idx").on(table.userId),
+]);
+
 

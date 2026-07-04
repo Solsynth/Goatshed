@@ -87,6 +87,31 @@
                     </p>
                 </div>
 
+                <div class="mt-4 rounded-2xl border border-base-300 bg-base-100 p-5">
+                    <div class="flex items-center gap-3 mb-4">
+                        <Ticket class="h-5 w-5 text-primary" />
+                        <h2 class="text-lg font-bold">陪玩票</h2>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="rounded-xl bg-base-200 p-3 text-center">
+                            <div class="text-2xl font-bold text-primary">{{ ticketBalance.total }}</div>
+                            <div class="text-xs text-base-content/50">总票数</div>
+                        </div>
+                        <div class="rounded-xl bg-base-200 p-3 text-center">
+                            <div class="text-2xl font-bold text-warning">{{ ticketBalance.used }}</div>
+                            <div class="text-xs text-base-content/50">已使用</div>
+                        </div>
+                        <div class="rounded-xl bg-base-200 p-3 text-center">
+                            <div class="text-2xl font-bold text-success">{{ ticketBalance.available }}</div>
+                            <div class="text-xs text-base-content/50">可用</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <NuxtLink to="/store/buy/gaming" class="btn btn-primary btn-sm flex-1">购买陪玩票</NuxtLink>
+                        <NuxtLink to="/mahjong" class="btn btn-ghost btn-sm">麻将场次</NuxtLink>
+                    </div>
+                </div>
+
                 <div class="mt-4 rounded-box border border-base-300 bg-base-100">
                     <div class="p-2">
                         <NuxtLink
@@ -265,6 +290,7 @@ import {
     Loader2,
     RefreshCw,
     Receipt,
+    Ticket,
 } from "lucide-vue-next";
 definePageMeta({
     middleware: ["auth"],
@@ -277,6 +303,7 @@ const auth = useAuth();
 const showLogoutConfirm = ref(false);
 const isLoggingOut = ref(false);
 const isRefreshing = ref(false);
+const ticketBalance = ref({ total: 0, used: 0, available: 0 });
 
 const { data: session } = await auth.useSession(useFetch);
 const { data: profile } = await useFetch<Record<string, any> | null>(
@@ -360,6 +387,14 @@ async function logout() {
         isLoggingOut.value = false;
     }
 }
+
+onMounted(async () => {
+    try {
+        ticketBalance.value = await $fetch("/api/sessions/tickets") as { total: number; used: number; available: number };
+    } catch {
+        // silently fail
+    }
+});
 
 useHead({ title: "我的账户" });
 </script>
