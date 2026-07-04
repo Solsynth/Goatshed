@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
       currency: orders.currency,
       quantity: orders.quantity,
       status: orders.status,
+      deliveryStatus: orders.deliveryStatus,
       remarks: orders.remarks,
       paidAt: orders.paidAt,
       createdAt: orders.createdAt,

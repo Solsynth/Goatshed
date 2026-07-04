@@ -155,13 +155,13 @@
                     <NotebookText class="link-icon" />
                     <span>日常</span>
                 </NuxtLink>
-                <NuxtLink to="/store/buy?product=donation" class="link-card">
+                <NuxtLink to="/donate" class="link-card">
                     <Heart class="link-icon" />
                     <span>打赏</span>
                 </NuxtLink>
-                <NuxtLink to="/store/buy?product=gaming" class="link-card">
+                <NuxtLink to="/store" class="link-card">
                     <Ticket class="link-icon" />
-                    <span>陪玩票</span>
+                    <span>商店</span>
                 </NuxtLink>
             </div>
 
@@ -175,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { FileText, House, NotebookText, Ticket } from "lucide-vue-next";
+import { FileText, Heart, House, NotebookText, Ticket } from "lucide-vue-next";
 import type { Publisher } from "~/types/publisher";
 
 const config = useRuntimeConfig();

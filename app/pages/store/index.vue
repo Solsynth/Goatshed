@@ -37,7 +37,7 @@
                                 <span class="ml-1 text-sm text-base-content/50">{{ product.currency }}</span>
                             </div>
                             <NuxtLink
-                                :to="`/store/buy?product=${product.identifier}`"
+                                :to="`/store/buy/${product.identifier}`"
                                 class="btn btn-primary btn-sm gap-1"
                             >
                                 <ShoppingCart class="h-4 w-4" />

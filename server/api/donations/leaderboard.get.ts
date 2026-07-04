@@ -1,6 +1,6 @@
 import { desc, eq, sql, and } from "drizzle-orm";
 import { db } from "~~/server/utils/db";
-import { orders, user } from "~~/server/db/index";
+import { orders, user, account } from "~~/server/db/index";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -19,6 +19,8 @@ export default defineEventHandler(async (event) => {
       userId: orders.userId,
       userName: user.name,
       userImage: user.image,
+      solarName: sql<string>`${account.solarProfile}->>'name'`,
+      solarNick: sql<string>`${account.solarProfile}->'profile'->>'nick'`,
       totalAmount: sql<string>`sum(${orders.amount})`,
       currency: sql<string>`max(${orders.currency})`,
       count: sql<number>`count(*)::int`,
@@ -26,8 +28,12 @@ export default defineEventHandler(async (event) => {
     })
     .from(orders)
     .innerJoin(user, eq(orders.userId, user.id))
+    .leftJoin(
+      account,
+      and(eq(account.userId, user.id), eq(account.providerId, "solian")),
+    )
     .where(whereFilter)
-    .groupBy(orders.userId, user.name, user.image)
+    .groupBy(orders.userId, user.name, user.image, account.solarProfile)
     .orderBy(desc(sql`sum(${orders.amount})`))
     .limit(limit)
     .offset(offset);
@@ -43,8 +49,8 @@ export default defineEventHandler(async (event) => {
   return {
     leaderboard: leaderboard.map((entry) => ({
       id: entry.userId,
-      name: entry.userName,
-      avatarUrl: entry.userImage || `${config.public.apiBaseUrl}/passport/accounts/${encodeURIComponent(entry.userName)}/picture`,
+      name: entry.solarNick || entry.solarName || entry.userName,
+      avatarUrl: entry.userImage || (entry.solarName ? `${config.public.apiBaseUrl}/passport/accounts/${encodeURIComponent(entry.solarName)}/picture` : ""),
       totalAmount: entry.totalAmount,
       currency: entry.currency,
       count: entry.count,

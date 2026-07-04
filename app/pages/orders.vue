@@ -54,6 +54,7 @@
                             <th>金额</th>
                             <th>数量</th>
                             <th>状态</th>
+                            <th>发货</th>
                             <th>创建时间</th>
                             <th class="text-right">操作</th>
                         </tr>
@@ -71,6 +72,12 @@
                                 <span :class="['badge', getOrderBadge(order.status)]">
                                     {{ getOrderLabel(order.status) }}
                                 </span>
+                            </td>
+                            <td>
+                                <span v-if="order.deliveryStatus" :class="['badge', getDeliveryBadge(order.deliveryStatus)]">
+                                    {{ getDeliveryLabel(order.deliveryStatus) }}
+                                </span>
+                                <span v-else class="text-base-content/30 text-sm">-</span>
                             </td>
                             <td class="text-sm text-base-content/60">{{ formatDate(order.createdAt) }}</td>
                             <td>
@@ -114,8 +121,8 @@
                 <Receipt class="mx-auto h-12 w-12 text-base-content/20" />
                 <p class="mt-2 text-base-content/50">暂无订单</p>
                 <div class="mt-4 flex justify-center gap-2">
-                    <NuxtLink to="/store/buy?product=donation" class="btn btn-primary btn-sm">前往打赏</NuxtLink>
-                    <NuxtLink to="/store/buy?product=gaming" class="btn btn-outline btn-sm">购买陪玩票</NuxtLink>
+                    <NuxtLink to="/store/buy/donation" class="btn btn-primary btn-sm">前往打赏</NuxtLink>
+                    <NuxtLink to="/store/buy/gaming" class="btn btn-outline btn-sm">购买陪玩票</NuxtLink>
                 </div>
             </div>
 
@@ -164,6 +171,12 @@
                         <span class="text-base-content/60">状态</span>
                         <span :class="['badge', getOrderBadge(selectedOrder.status)]">
                             {{ getOrderLabel(selectedOrder.status) }}
+                        </span>
+                    </div>
+                    <div v-if="selectedOrder.deliveryStatus" class="flex justify-between">
+                        <span class="text-base-content/60">发货状态</span>
+                        <span :class="['badge', getDeliveryBadge(selectedOrder.deliveryStatus)]">
+                            {{ getDeliveryLabel(selectedOrder.deliveryStatus) }}
                         </span>
                     </div>
                     <div class="flex justify-between">
@@ -373,6 +386,16 @@ function getOrderBadge(status: string) {
 
 function getOrderLabel(status: string) {
     return status;
+}
+
+function getDeliveryBadge(status: string) {
+    const map: Record<string, string> = { "pending": "badge-warning", "shipped": "badge-info", "completed": "badge-success" };
+    return map[status] || "badge-ghost";
+}
+
+function getDeliveryLabel(status: string) {
+    const map: Record<string, string> = { "pending": "待发货", "shipped": "已发货", "completed": "已完成" };
+    return map[status] || status || "待发货";
 }
 
 function formatDate(date: string | Date | null) {

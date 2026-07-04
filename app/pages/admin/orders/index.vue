@@ -7,7 +7,7 @@
                     v-for="s in statusFilters"
                     :key="s.value"
                     :class="['btn btn-sm', activeStatus === s.value ? 'btn-primary' : 'btn-outline']"
-                    @click="activeStatus = s.value; refresh()"
+                    @click="activeStatus = s.value; refresh(true)"
                 >
                     {{ s.label }}
                 </button>
@@ -25,6 +25,7 @@
                         <th>数量</th>
                         <th>留言</th>
                         <th>状态</th>
+                        <th>发货</th>
                         <th>支付时间</th>
                         <th>操作</th>
                     </tr>
@@ -47,6 +48,21 @@
                         <td>
                             <span :class="['badge', getStatusBadge(order.status)]">
                                 {{ getStatusLabel(order.status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <select
+                                v-if="order.status === '已支付'"
+                                :class="['select select-bordered select-xs w-24', getDeliveryBadge(order.deliveryStatus)]"
+                                :value="order.deliveryStatus || 'pending'"
+                                @change="updateDelivery(order, ($event.target as HTMLSelectElement).value)"
+                            >
+                                <option value="pending">待发货</option>
+                                <option value="shipped">已发货</option>
+                                <option value="completed">已完成</option>
+                            </select>
+                            <span v-else :class="['badge', getDeliveryBadge(order.deliveryStatus)]">
+                                {{ getDeliveryLabel(order.deliveryStatus) }}
                             </span>
                         </td>
                         <td class="text-sm text-base-content/60">{{ formatDate(order.paidAt) }}</td>
@@ -130,6 +146,12 @@
                         </span>
                     </div>
                     <div class="flex justify-between">
+                        <span class="text-base-content/60">发货状态</span>
+                        <span :class="['badge', getDeliveryBadge(selectedOrder.deliveryStatus)]">
+                            {{ getDeliveryLabel(selectedOrder.deliveryStatus) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
                         <span class="text-base-content/60">创建时间</span>
                         <span>{{ formatDate(selectedOrder.createdAt) }}</span>
                     </div>
@@ -188,15 +210,9 @@ async function fetchOrders() {
     total.value = data.total;
 }
 
-const refresh = ref<(() => void) | null>(null);
-
-function debounceFetch() {
-    if (refresh.value) return;
-    refresh.value = () => {
-        fetchOrders();
-        refresh.value = null;
-    };
-    setTimeout(refresh.value, 200);
+async function refresh(resetPage = false) {
+    if (resetPage) page.value = 1;
+    await fetchOrders();
 }
 
 onMounted(fetchOrders);
@@ -211,6 +227,11 @@ async function markFinished(order: any) {
     await fetchOrders();
 }
 
+async function updateDelivery(order: any, deliveryStatus: string) {
+    await $fetch(`/api/admin/orders/${order.id}`, { method: "PATCH", body: { deliveryStatus } });
+    order.deliveryStatus = deliveryStatus;
+}
+
 function getStatusBadge(status: string) {
     const map: Record<string, string> = { "已支付": "badge-success", "待支付": "badge-warning", "已完成": "badge-info", "已取消": "badge-error" };
     return map[status] || "badge-ghost";
@@ -218,6 +239,16 @@ function getStatusBadge(status: string) {
 
 function getStatusLabel(status: string) {
     return status;
+}
+
+function getDeliveryBadge(status: string) {
+    const map: Record<string, string> = { "pending": "badge-warning", "shipped": "badge-info", "completed": "badge-success" };
+    return map[status] || "badge-ghost";
+}
+
+function getDeliveryLabel(status: string) {
+    const map: Record<string, string> = { "pending": "待发货", "shipped": "已发货", "completed": "已完成" };
+    return map[status] || status || "待发货";
 }
 
 function formatDate(date: string | Date | null) {

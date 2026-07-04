@@ -65,6 +65,7 @@ export const orders = pgTable("orders", {
     quantity: integer("quantity").notNull().default(1),
     remarks: text("remarks"),
     status: orderStatus("status").notNull().default("待支付"),
+    deliveryStatus: text("delivery_status").default("pending"),
     paidAt: timestamp("paid_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
@@ -74,4 +75,28 @@ export const orders = pgTable("orders", {
     index("orders_status_idx").on(table.status),
     index("orders_paidAt_idx").on(table.paidAt),
     index("orders_productType_idx").on(table.productType),
+]);
+
+export const gamingSession = pgTable("gaming_session", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    description: text("description"),
+    ticketCost: integer("ticket_cost").notNull().default(1),
+    status: text("status").default("upcoming"),
+    createdBy: text("created_by").notNull().references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+    index("gaming_session_createdBy_idx").on(table.createdBy),
+]);
+
+export const sessionParticipant = pgTable("session_participant", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    sessionId: text("session_id").notNull().references(() => gamingSession.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    ticketsUsed: integer("tickets_used").notNull().default(1),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+}, (table) => [
+    index("session_participant_sessionId_idx").on(table.sessionId),
+    index("session_participant_userId_idx").on(table.userId),
 ]);

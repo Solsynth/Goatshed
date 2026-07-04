@@ -1,7 +1,7 @@
 <template>
-    <NuxtLink to="/store/buy?product=donation" class="btn btn-primary gap-2">
+    <NuxtLink to="/donate" class="btn btn-primary gap-2">
         <Heart class="h-4 w-4" />
-        打赏支持
+        打赏排行榜
     </NuxtLink>
 </template>
 

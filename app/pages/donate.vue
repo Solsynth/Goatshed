@@ -1,307 +1,178 @@
 <template>
     <main class="page-shell py-8">
-        <div class="mx-auto max-w-2xl">
-            <div class="rounded-2xl border border-base-300 bg-base-100 overflow-hidden">
-                <div class="bg-gradient-to-br from-primary/10 via-base-100 to-secondary/10 p-8 sm:p-12">
-                    <div class="flex flex-col items-center text-center">
-                        <div
-                            v-if="product?.pictureUrl"
-                            class="h-24 w-24 overflow-hidden rounded-2xl ring-4 ring-primary/10"
-                        >
-                            <img
-                                :src="product.pictureUrl"
-                                :alt="product.displayName || productTitle"
-                                class="h-full w-full object-cover"
-                            />
-                        </div>
-                        <div
-                            v-else
-                            class="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10"
-                        >
-                            <component :is="productIcon" class="h-10 w-10 text-primary" />
-                        </div>
-                        <h1 class="mt-6 text-2xl font-black sm:text-3xl">
-                            {{ product?.displayName || productTitle }}
-                        </h1>
-                        <p v-if="product" class="mt-2 text-sm text-base-content/60">
-                            {{ product.description || productDescription }}
-                        </p>
-                        <div v-if="product" class="mt-4">
-                            <span class="text-3xl font-black text-primary">{{ product.price }}</span>
-                            <span class="ml-1 text-lg text-base-content/50">{{ product.currency }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-t border-base-300 p-6 sm:p-8">
-                    <div class="space-y-6">
-                        <div>
-                            <label class="label">
-                                <span class="label-text font-semibold">数量</span>
-                                <span class="label-text-alt text-base-content/40">
-                                    每份 {{ product?.price || "?" }} {{ product?.currency || "" }}
-                                </span>
-                            </label>
-                            <div class="flex items-center gap-4">
-                                <div class="join">
-                                    <button
-                                        class="btn join-item btn-square"
-                                        :disabled="quantity <= 1"
-                                        @click="quantity = Math.max(1, quantity - 1)"
-                                    >
-                                        <Minus class="h-4 w-4" />
-                                    </button>
-                                    <input
-                                        v-model.number="quantity"
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        class="input join-item w-16 text-center" />
-                                    <button
-                                        class="btn join-item btn-square"
-                                        :disabled="quantity >= 100"
-                                        @click="quantity = Math.min(100, quantity + 1)"
-                                    >
-                                        <Plus class="h-4 w-4" />
-                                    </button>
-                                </div>
-                                <div class="ml-auto text-right">
-                                    <div class="text-xs text-base-content/40">合计</div>
-                                    <div class="text-xl font-bold text-primary">
-                                        {{ totalAmount }} {{ product?.currency || "" }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="label">
-                                <span class="label-text font-semibold">留言（可选）</span>
-                            </label>
-                            <textarea
-                                v-model="message"
-                                maxlength="200"
-                                :placeholder="messagePlaceholder"
-                                class="textarea textarea-bordered w-full resize-none"
-                                rows="2"
-                            />
-                            <div class="mt-1 text-right text-xs text-base-content/40">
-                                {{ message.length }}/200
-                            </div>
-                        </div>
-
-                        <button
-                            class="btn btn-primary btn-block btn-lg gap-2"
-                            :disabled="isSubmitting"
-                            @click="submitOrder"
-                        >
-                            <Loader2 v-if="isSubmitting" class="h-5 w-5 animate-spin" />
-                            <ShoppingCart v-else class="h-5 w-5" />
-                            {{ isSubmitting ? "创建订单中..." : actionLabel }}
-                        </button>
-
-                        <p class="text-center text-xs text-base-content/40">
-                            通过 Solarpass 钱包安全支付
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <p v-if="error" class="mt-4 text-center text-sm text-error">
-                {{ error }}
-            </p>
-        </div>
-
-        <dialog ref="confirmDialog" class="modal">
-            <div class="modal-box max-w-sm">
-                <h3 class="text-lg font-bold">完成支付了吗？</h3>
-                <p class="py-4 text-sm text-base-content/70">
-                    请在弹出的窗口中完成支付，完成后点击确认。
-                </p>
-                <div class="modal-action">
-                    <form method="dialog">
-                        <button class="btn btn-ghost" :disabled="isChecking">
-                            取消
-                        </button>
-                    </form>
-                    <button
-                        class="btn btn-primary"
-                        :disabled="isChecking"
-                        @click="confirmPayment"
-                    >
-                        <Loader2 v-if="isChecking" class="h-4 w-4 animate-spin" />
-                        <Check v-else class="h-4 w-4" />
-                        确认
-                    </button>
-                </div>
-            </div>
-            <form method="dialog" class="modal-backdrop">
-                <button>关闭</button>
-            </form>
-        </dialog>
-
-        <dialog ref="resultDialog" class="modal">
-            <div class="modal-box max-w-sm text-center">
-                <div
-                    v-if="paymentResult === '已支付'"
-                    class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/20"
-                >
-                    <Check class="h-8 w-8 text-success" />
-                </div>
-                <div
-                    v-else
-                    class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-warning/20"
-                >
-                    <Clock class="h-8 w-8 text-warning" />
-                </div>
-                <h3 class="mt-4 text-lg font-bold">
-                    {{ paymentResult === "已支付" ? successTitle : "等待支付" }}
-                </h3>
+        <div class="mx-auto max-w-3xl">
+            <div class="rounded-2xl border border-base-300 bg-base-100 p-8 text-center">
+                <Trophy class="mx-auto h-10 w-10 text-primary" />
+                <h1 class="mt-4 text-2xl font-black">打赏排行榜</h1>
                 <p class="mt-2 text-sm text-base-content/60">
-                    {{ paymentResult === "已支付" ? successMessage : "订单尚未支付，请在钱包中完成后再确认。" }}
+                    感谢所有支持我的朋友 ❤️
                 </p>
-                <div class="modal-action justify-center">
-                    <NuxtLink
-                        v-if="paymentResult === '已支付' && productType === 'donation'"
-                        to="/sponsors"
-                        class="btn btn-primary"
-                    >
-                        查看打赏排行榜
-                    </NuxtLink>
-                    <NuxtLink
-                        v-else-if="paymentResult === '已支付'"
-                        to="/"
-                        class="btn btn-primary"
-                    >
-                        返回首页
-                    </NuxtLink>
-                    <form v-else method="dialog">
-                        <button class="btn btn-ghost">关闭</button>
-                    </form>
+
+                <div
+                    v-if="stats.total > 0"
+                    class="mt-6 flex items-center justify-center gap-8"
+                >
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary">{{ stats.total }}</div>
+                        <div class="text-xs text-base-content/50">赞助次数</div>
+                    </div>
+                    <div class="h-8 w-px bg-base-300" />
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary">{{ stats.totalAmount }}</div>
+                        <div class="text-xs text-base-content/50">总金额</div>
+                    </div>
                 </div>
             </div>
-            <form method="dialog" class="modal-backdrop">
-                <button>关闭</button>
-            </form>
-        </dialog>
+
+            <div v-if="topThree.length > 0" class="mt-8 grid grid-cols-3 gap-3">
+                <div
+                    v-for="(sponsor, i) in topThree"
+                    :key="sponsor.id"
+                    :class="[
+                        'rounded-2xl border bg-base-100 p-4 text-center',
+                        i === 0 ? 'border-warning ring-2 ring-warning/30 sm:-mt-4' : 'border-base-300',
+                    ]"
+                >
+                    <div class="flex justify-center">
+                        <div :class="['flex h-10 w-10 items-center justify-center rounded-full', podiumBg(i)]">
+                            <component :is="podiumIcon(i)" class="h-5 w-5" />
+                        </div>
+                    </div>
+                    <div class="avatar mt-2">
+                        <div class="h-12 w-12 rounded-full ring-2 ring-offset-2 ring-offset-base-100" :class="ringColor(i)">
+                            <img :src="sponsor.avatarUrl" :alt="sponsor.name" />
+                        </div>
+                    </div>
+                    <div class="mt-2 truncate font-bold">{{ sponsor.name }}</div>
+                    <div class="mt-1 text-sm font-semibold text-primary">
+                        {{ sponsor.totalAmount }} {{ sponsor.currency }}
+                    </div>
+                    <div class="text-xs text-base-content/40">{{ sponsor.count }} 次</div>
+                </div>
+            </div>
+
+            <div v-if="restSponsors.length > 0" class="mt-6 rounded-xl border border-base-300 bg-base-100 overflow-hidden">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th class="w-16 text-center">#</th>
+                            <th>用户</th>
+                            <th class="text-right">金额</th>
+                            <th class="text-right">次数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(sponsor, i) in restSponsors" :key="sponsor.id">
+                            <td class="text-center font-bold text-base-content/40">{{ i + 4 }}</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar">
+                                        <div class="h-8 w-8 rounded-full">
+                                            <img :src="sponsor.avatarUrl" :alt="sponsor.name" />
+                                        </div>
+                                    </div>
+                                    <span class="font-medium">{{ sponsor.name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-right font-semibold text-primary">
+                                {{ sponsor.totalAmount }} {{ sponsor.currency }}
+                            </td>
+                            <td class="text-right text-sm text-base-content/50">{{ sponsor.count }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div
+                v-else-if="topThree.length === 0 && !isLoading"
+                class="mt-8 rounded-2xl border border-base-300 bg-base-100 p-12 text-center"
+            >
+                <Trophy class="mx-auto h-12 w-12 text-base-content/20" />
+                <p class="mt-3 text-base-content/50">还没有赞助者，成为第一个上榜者吧！</p>
+                <NuxtLink to="/store/buy/donation" class="btn btn-primary mt-4">前去支持</NuxtLink>
+            </div>
+
+            <div v-if="hasMore" class="mt-6 text-center">
+                <button class="btn btn-ghost" :disabled="isLoading" @click="loadMore">
+                    <Loader2 v-if="isLoading" class="h-4 w-4 animate-spin" />
+                    {{ isLoading ? "加载中..." : "加载更多" }}
+                </button>
+            </div>
+        </div>
     </main>
 </template>
 
 <script setup lang="ts">
-import { Heart, Ticket, Plus, Minus, Loader2, Check, Clock, ShoppingCart } from "lucide-vue-next";
+import { Trophy, Medal, Award, Loader2 } from "lucide-vue-next";
 import type { Component } from "vue";
 
-const route = useRoute();
-const productType = (route.query.product as string) || "donation";
+interface LeaderboardEntry {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    totalAmount: string;
+    currency: string;
+    count: number;
+    remarks: string | null;
+    lastPaidAt: string;
+}
 
-const productConfig: Record<string, {
-    title: string;
-    description: string;
-    placeholder: string;
-    actionLabel: string;
-    successTitle: string;
-    successMessage: string;
-    icon: Component;
-}> = {
-    donation: {
-        title: "小羊的爱",
-        description: "每一份支持都是我继续创作的动力 ❤️",
-        placeholder: "给小羊说点什么吧...",
-        actionLabel: "立即支持",
-        successTitle: "感谢支持！",
-        successMessage: "你的打赏已到账 ❤️",
-        icon: Heart,
-    },
-    ticket: {
-        title: "陪玩票",
-        description: "和小羊一起玩游戏吧",
-        placeholder: "留下你的游戏 ID 或备注...",
-        actionLabel: "购买陪玩票",
-        successTitle: "购买成功！",
-        successMessage: "你的陪玩券已到账，等我联系你",
-        icon: Ticket,
-    },
-};
+const leaderboard = ref<LeaderboardEntry[]>([]);
+const isLoading = ref(false);
+const hasMore = ref(false);
+const offset = ref(0);
+const LIMIT = 50;
+const stats = ref({ total: 0, totalAmount: "0" });
 
-const config = productConfig[productType] || productConfig.donation;
-const productTitle = config.title;
-const productDescription = config.description;
-const messagePlaceholder = config.placeholder;
-const actionLabel = config.actionLabel;
-const successTitle = config.successTitle;
-const successMessage = config.successMessage;
-const productIcon = config.icon;
+const topThree = computed(() => leaderboard.value.slice(0, 3));
+const restSponsors = computed(() => leaderboard.value.slice(3));
 
-definePageMeta({
-    middleware: ["auth"],
-});
-
-const { data: product } = await useFetch<Record<string, any> | null>(
-    "/api/donations/product",
-    {
-        query: { type: productType },
-        default: () => null,
-        headers: import.meta.server ? useRequestHeaders(["cookie"]) : undefined,
-    },
-);
-
-const quantity = ref(1);
-const message = ref("");
-const isSubmitting = ref(false);
-const isChecking = ref(false);
-const error = ref("");
-const orderId = ref<string | null>(null);
-const confirmDialog = ref<HTMLDialogElement>();
-const resultDialog = ref<HTMLDialogElement>();
-const paymentResult = ref<"已支付" | "待支付">("待支付");
-
-const totalAmount = computed(() => {
-    if (!product.value) return 0;
-    const price = Number(product.value.price) || 0;
-    return price * quantity.value;
-});
-
-async function submitOrder() {
-    isSubmitting.value = true;
-    error.value = "";
+async function fetchLeaderboard() {
+    isLoading.value = true;
     try {
-        const result = await $fetch<{ orderId: string; payUrl: string }>(
-            "/api/donations/order",
-            {
-                method: "POST",
-                body: {
-                    product: productType,
-                    quantity: quantity.value,
-                    message: message.value || undefined,
-                },
-            },
-        );
-        orderId.value = result.orderId;
-        window.open(result.payUrl, "_blank", "width=480,height=720");
-        confirmDialog.value?.showModal();
-    } catch (e: any) {
-        error.value = e.data?.message || "创建订单失败，请稍后重试";
+        const data = await $fetch<{
+            leaderboard: LeaderboardEntry[];
+            total: number;
+            totalAmount: string;
+        }>("/api/donations/leaderboard", {
+            query: { limit: LIMIT, offset: offset.value, productType: "donation" },
+        });
+
+        leaderboard.value.push(...data.leaderboard);
+        stats.value = { total: data.total, totalAmount: data.totalAmount };
+        hasMore.value = leaderboard.value.length < data.total;
+        offset.value += LIMIT;
     } finally {
-        isSubmitting.value = false;
+        isLoading.value = false;
     }
 }
 
-async function confirmPayment() {
-    if (!orderId.value) return;
-    isChecking.value = true;
-    try {
-        const result = await $fetch<{ status: string }>(
-            `/api/donations/order/${orderId.value}`,
-        );
-        paymentResult.value = result.status === "已支付" ? "已支付" as any : "待支付" as any;
-    } catch {
-        paymentResult.value = "unpaid";
-    } finally {
-        isChecking.value = false;
-        confirmDialog.value?.close();
-        resultDialog.value?.showModal();
-    }
+function loadMore() {
+    fetchLeaderboard();
 }
 
-useHead({ title: productTitle });
+function podiumBg(index: number) {
+    const colors = ["bg-warning text-warning-content", "bg-base-300 text-base-content", "bg-amber-700 text-amber-100"];
+    return colors[index] || "bg-base-200";
+}
+
+function podiumIcon(index: number): Component {
+    const icons = [Trophy, Medal, Award];
+    return icons[index] || Medal;
+}
+
+function ringColor(index: number) {
+    const colors = ["ring-warning", "ring-base-400", "ring-amber-600"];
+    return colors[index] || "ring-base-300";
+}
+
+await fetchLeaderboard();
+
+useHead({
+    title: "打赏排行榜",
+    meta: [
+        { name: "description", content: "打赏排行榜 - 感谢所有支持者" },
+        { property: "og:title", content: "打赏排行榜 - Goatshed" },
+    ],
+});
 </script>

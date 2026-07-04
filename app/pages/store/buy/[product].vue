@@ -112,6 +112,35 @@
             <p v-if="error" class="mt-4 text-center text-sm text-error">
                 {{ error }}
             </p>
+
+            <div v-if="productType === 'gaming'" class="mt-10">
+                <div class="mb-4 flex items-center gap-2">
+                    <Gamepad2 class="h-5 w-5 text-primary" />
+                    <h2 class="text-lg font-bold">可加入的陪玩场次</h2>
+                </div>
+                <div v-if="gamingSessions.length > 0" class="space-y-3">
+                    <div
+                        v-for="s in gamingSessions"
+                        :key="s.id"
+                        class="flex items-center justify-between rounded-xl border border-base-300 bg-base-100 p-4"
+                    >
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <div class="font-semibold">{{ s.name }}</div>
+                                <span :class="['badge badge-xs', getSessionStatusBadge(s.status)]">
+                                    {{ getSessionStatusLabel(s.status) }}
+                                </span>
+                            </div>
+                            <div v-if="s.description" class="mt-0.5 text-sm text-base-content/50">{{ s.description }}</div>
+                            <div class="mt-1 text-xs text-base-content/40">{{ s.participantCount }} 人已加入</div>
+                        </div>
+                        <span class="badge badge-info shrink-0">{{ s.ticketCost }} 张票</span>
+                    </div>
+                </div>
+                <div v-else class="rounded-xl border border-base-300 bg-base-100 p-8 text-center text-sm text-base-content/50">
+                    暂无陪玩场次，购买票后等待场次开放
+                </div>
+            </div>
         </div>
 
         <dialog ref="payDialog" class="modal">
@@ -175,17 +204,17 @@
                 <div class="modal-action justify-center">
                     <NuxtLink
                         v-if="paymentResult === '已支付' && productType === 'donation'"
-                        to="/sponsors"
+                        to="/donate"
                         class="btn btn-primary"
                     >
                         查看打赏排行榜
                     </NuxtLink>
                     <NuxtLink
-                        v-else-if="paymentResult === '已支付'"
-                        to="/"
+                        v-else-if="paymentResult === '已支付' && productType === 'gaming'"
+                        to="/sessions"
                         class="btn btn-primary"
                     >
-                        返回首页
+                        查看陪玩场次
                     </NuxtLink>
                     <form v-else method="dialog">
                         <button class="btn btn-ghost">关闭</button>
@@ -200,11 +229,11 @@
 </template>
 
 <script setup lang="ts">
-import { Heart, Ticket, Plus, Minus, Loader2, Check, Clock, ShoppingCart, RefreshCw } from "lucide-vue-next";
+import { Heart, Ticket, Plus, Minus, Loader2, Check, Clock, ShoppingCart, RefreshCw, Gamepad2 } from "lucide-vue-next";
 import type { Component } from "vue";
 
 const route = useRoute();
-const productType = (route.query.product as string) || "donation";
+const productType = (route.params.product as string) || "donation";
 
 const productConfig: Record<string, {
     title: string;
@@ -267,6 +296,8 @@ const payDialog = ref<HTMLDialogElement>();
 const resultDialog = ref<HTMLDialogElement>();
 const paymentResult = ref<"已支付" | "待支付">("待支付");
 const payStatus = ref<"待支付" | "待支付">("待支付");
+
+const gamingSessions = ref<any[]>([]);
 
 const POLL_INTERVAL = 30000;
 
@@ -373,4 +404,20 @@ useHead({ title: productTitle });
 onUnmounted(() => {
     stopPolling();
 });
+
+if (productType === "gaming") {
+    $fetch("/api/sessions").then((data: any) => {
+        gamingSessions.value = data || [];
+    }).catch(() => {});
+}
+
+function getSessionStatusBadge(status: string) {
+    const map: Record<string, string> = { "upcoming": "badge-info", "ongoing": "badge-success", "ended": "badge-ghost" };
+    return map[status] || "badge-ghost";
+}
+
+function getSessionStatusLabel(status: string) {
+    const map: Record<string, string> = { "upcoming": "即将开始", "ongoing": "进行中", "ended": "已结束" };
+    return map[status] || status;
+}
 </script>

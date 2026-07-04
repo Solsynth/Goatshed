@@ -30,6 +30,14 @@
                     <Users class="h-4 w-4" />
                     用户
                 </NuxtLink>
+                <NuxtLink
+                    to="/admin/sessions"
+                    class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-base-200"
+                    active-class="bg-primary/10 text-primary font-medium"
+                >
+                    <Gamepad2 class="h-4 w-4" />
+                    陪玩场次
+                </NuxtLink>
             </nav>
         </aside>
         <main class="flex-1 p-6">
@@ -39,5 +47,5 @@
 </template>
 
 <script setup lang="ts">
-import { Shield, LayoutDashboard, Receipt, Users } from "lucide-vue-next";
+import { Shield, LayoutDashboard, Receipt, Users, Gamepad2 } from "lucide-vue-next";
 </script>

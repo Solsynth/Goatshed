@@ -51,10 +51,11 @@ export default defineEventHandler(async (event) => {
   if (localStatus === "已支付" && order.status !== "已支付") {
     await db
       .update(orders)
-      .set({ status: "已支付", paidAt: new Date() })
+      .set({ status: "已支付", paidAt: new Date(), deliveryStatus: "pending" })
       .where(eq(orders.id, orderId));
     order.status = "已支付";
     order.paidAt = new Date();
+    order.deliveryStatus = "pending";
   } else if (snOrder.status && localStatus !== order.status) {
     await db
       .update(orders)
@@ -71,6 +72,7 @@ export default defineEventHandler(async (event) => {
     quantity: order.quantity,
     remarks: order.remarks,
     status: order.status,
+    deliveryStatus: order.deliveryStatus,
     paidAt: order.paidAt,
     createdAt: order.createdAt,
     productType: order.productType,
