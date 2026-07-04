@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/solsynth/goatshed
+          images: ghcr.io/littlesheep2code/goatshed
           tags: |
             type=sha,format=short
             type=raw,value=latest,if:github.ref == 'refs/heads/master'
