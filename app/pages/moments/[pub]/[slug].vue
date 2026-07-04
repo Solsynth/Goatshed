@@ -161,6 +161,11 @@
                 />
               </div>
             </div>
+
+            <div v-if="post?.id" class="mt-4">
+              <ReactionBar :post-id="post.id" />
+            </div>
+            <CommentSection :post-id="post.id" v-if="post?.id" />
           </div>
         </div>
       </div>

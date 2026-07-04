@@ -7,6 +7,7 @@ export const user = pgTable("user", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  nick: text("nick"),
   image: text("image"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -100,3 +101,5 @@ export const sessionParticipant = pgTable("session_participant", {
     index("session_participant_sessionId_idx").on(table.sessionId),
     index("session_participant_userId_idx").on(table.userId),
 ]);
+
+

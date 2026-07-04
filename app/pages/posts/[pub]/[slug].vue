@@ -182,6 +182,13 @@
       </div>
     </div>
 
+    <section class="mt-8" data-pagefind-ignore>
+      <div class="flex items-center gap-4 mb-6">
+        <ReactionBar :post-id="post.id" v-if="post?.id" />
+      </div>
+      <CommentSection :post-id="post.id" v-if="post?.id" />
+    </section>
+
     <div class="grid grid-cols-2 gap-3 mt-10" data-pagefind-ignore>
       <NuxtLink
         v-if="prevPost"

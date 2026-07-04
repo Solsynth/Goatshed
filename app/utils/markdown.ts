@@ -34,6 +34,9 @@ const LANGUAGE_ALIASES: Record<string, string> = {
   ts: "typescript",
   md: "markdown",
   text: "plaintext",
+  conf: "ini",
+  config: "ini",
+  cfg: "ini",
 };
 
 function normalizeLanguage(input: string): string {
@@ -102,6 +105,17 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
 };
 
 export async function renderMarkdown(content: string): Promise<string> {
-  await ensureLanguagesForContent(content || "");
-  return md.render(content || "");
+  try {
+    await ensureLanguagesForContent(content || "");
+    return md.render(content || "");
+  } catch (e) {
+    console.error("[markdown] Render failed, falling back without highlighting:", e);
+    const plainMd = new MarkdownIt({
+      html: false,
+      linkify: true,
+      typographer: true,
+      breaks: true,
+    });
+    return plainMd.render(content || "");
+  }
 }

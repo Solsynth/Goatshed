@@ -58,7 +58,6 @@
       <div
         class="flex items-center justify-between text-xs text-base-content/70"
       >
-        <span>{{ post.repliesCount }} 条评论</span>
         <NuxtLink :to="postUrl" class="link link-primary">阅读全文</NuxtLink>
       </div>
     </div>
