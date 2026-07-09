@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 class="mb-6 text-2xl font-bold">用户管理</h1>
+        <h1 class="mb-4 text-xl font-bold md:mb-6 md:text-2xl">用户管理</h1>
 
         <div class="overflow-x-auto rounded-xl border border-base-300 bg-base-100">
             <table class="table table-zebra">
@@ -9,6 +9,7 @@
                         <th>用户</th>
                         <th>邮箱</th>
                         <th>管理员</th>
+                        <th>Solar Token</th>
                         <th>注册时间</th>
                         <th>操作</th>
                     </tr>
@@ -40,9 +41,53 @@
                             <span v-if="u.isAdmin" class="badge badge-success">是</span>
                             <span v-else class="badge badge-ghost">否</span>
                         </td>
+                        <td>
+                            <div class="flex items-center gap-1">
+                                <button
+                                    v-if="!tokenCache[u.id]"
+                                    class="btn btn-ghost btn-xs"
+                                    :disabled="loadingToken === u.id"
+                                    @click="fetchToken(u.id)"
+                                >
+                                    <KeyRound class="h-3 w-3" />
+                                    <Loader2 v-if="loadingToken === u.id" class="h-3 w-3 animate-spin" />
+                                    <span v-else>查看</span>
+                                </button>
+                                <template v-else>
+                                    <span
+                                        v-if="!tokenCache[u.id]?.hasToken"
+                                        class="badge badge-ghost badge-xs"
+                                    >无</span>
+                                    <span
+                                        v-else-if="tokenCache[u.id]?.needsRefresh"
+                                        class="badge badge-warning badge-xs"
+                                    >需刷新</span>
+                                    <span
+                                        v-else
+                                        class="badge badge-success badge-xs"
+                                    >有效</span>
+                                    <button
+                                        v-if="tokenCache[u.id]?.accessToken"
+                                        class="btn btn-ghost btn-xs"
+                                        title="复制 Token"
+                                        @click="copyToken(u.id)"
+                                    >
+                                        <Check v-if="copiedId === u.id" class="h-3 w-3 text-success" />
+                                        <Copy v-else class="h-3 w-3" />
+                                    </button>
+                                </template>
+                            </div>
+                        </td>
                         <td class="text-sm text-base-content/60">{{ formatDate(u.createdAt) }}</td>
                         <td>
                             <div class="flex gap-1">
+                                <button
+                                    class="btn btn-ghost btn-xs"
+                                    title="看板管理"
+                                    @click="openBoard(u)"
+                                >
+                                    <LayoutGrid class="h-3 w-3" />
+                                </button>
                                 <button
                                     class="btn btn-ghost btn-xs"
                                     @click="editUser(u)"
@@ -127,16 +172,300 @@
                 <button>关闭</button>
             </form>
         </dialog>
+
+        <!-- Board Management Dialog -->
+        <dialog ref="boardDialog" class="modal">
+            <div class="modal-box max-w-2xl">
+                <h3 class="text-lg font-bold">看板管理 — {{ boardUser?.name }}</h3>
+                <p class="mt-1 text-sm text-base-content/60">管理用户的个人主页组件</p>
+
+                <div v-if="boardLoading" class="flex items-center justify-center py-8">
+                    <Loader class="h-6 w-6 animate-spin text-base-content/40" />
+                </div>
+
+                <div v-else-if="boardError" class="mt-4">
+                    <div class="alert alert-error">
+                        <AlertCircle class="h-4 w-4" />
+                        <span>{{ boardError }}</span>
+                    </div>
+                </div>
+
+                <div v-else class="mt-4 space-y-3">
+                    <div v-if="boardItems.length === 0" class="rounded-lg border border-base-300 bg-base-50 p-8 text-center">
+                        <LayoutGrid class="mx-auto h-8 w-8 text-base-content/30" />
+                        <p class="mt-2 text-sm text-base-content/50">该用户暂无看板组件</p>
+                    </div>
+
+                    <div
+                        v-for="item in boardItems"
+                        :key="item.id"
+                        class="rounded-lg border border-base-300 bg-base-100 p-4"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium">{{ getWidgetDisplayName(item) }}</span>
+                                    <span class="badge badge-xs" :class="item.kind === 'custom_app' ? 'badge-info' : 'badge-ghost'">
+                                        {{ getWidgetKindLabel(item) }}
+                                    </span>
+                                    <span v-if="!item.is_enabled" class="badge badge-warning badge-xs">已禁用</span>
+                                </div>
+                                <div class="mt-2 space-y-1">
+                                    <div
+                                        v-for="(field, fieldName) in item.payload"
+                                        :key="fieldName"
+                                        class="flex items-center gap-2 text-sm"
+                                    >
+                                        <span class="text-base-content/50">{{ field.label || fieldName }}:</span>
+                                        <span class="font-mono text-xs text-base-content/70 truncate max-w-xs">{{ field.value ?? '—' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-1">
+                                <button
+                                    class="btn btn-ghost btn-xs"
+                                    title="编辑载荷"
+                                    @click="openEditPayload(item)"
+                                >
+                                    <Pencil class="h-3 w-3" />
+                                </button>
+                                <button
+                                    class="btn btn-ghost btn-xs text-error"
+                                    title="移除组件"
+                                    @click="removeBoardItem(item)"
+                                >
+                                    <Trash class="h-3 w-3" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-ghost">关闭</button>
+                    </form>
+                    <button class="btn btn-ghost" :disabled="boardLoading" @click="fetchBoard">
+                        <RefreshCw class="h-4 w-4" :class="{ 'animate-spin': boardLoading }" />
+                        刷新
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>关闭</button>
+            </form>
+        </dialog>
+
+        <!-- Edit Payload Dialog -->
+        <dialog ref="payloadEditDialog" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">编辑组件载荷</h3>
+                <p class="mt-1 text-sm text-base-content/60">{{ editingItem ? getWidgetDisplayName(editingItem) : '' }}</p>
+
+                <div class="mt-4 space-y-4">
+                    <div v-for="(field, fieldName) in editingItem?.payload" :key="fieldName" class="form-control">
+                        <label class="label"><span class="label-text">{{ field.label || fieldName }}</span></label>
+                        <input
+                            v-model="payloadForm[fieldName]"
+                            type="text"
+                            :placeholder="field.label || fieldName"
+                            class="input input-bordered"
+                        />
+                    </div>
+                </div>
+
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-ghost">取消</button>
+                    </form>
+                    <button class="btn btn-primary" :disabled="boardSaving" @click="savePayload">
+                        <Loader2 v-if="boardSaving" class="h-4 w-4 animate-spin" />
+                        保存
+                    </button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>关闭</button>
+            </form>
+        </dialog>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Users, Pencil, Trash2, Loader2 } from "lucide-vue-next";
+import { Users, Pencil, Trash2, Loader2, KeyRound, Copy, Check, RefreshCw, LayoutGrid, Plus, Trash, AlertCircle, Loader } from "lucide-vue-next";
+
+useHead({ title: "Admin - 用户管理" });
+
+// ── Board Management ──
+
+interface BoardItem {
+    id: string;
+    order: number;
+    kind: string;
+    widget_key: string | null;
+    custom_app_id: string | null;
+    custom_app_widget_key: string | null;
+    is_enabled: boolean;
+    payload: Record<string, any>;
+}
+
+const boardDialog = ref<HTMLDialogElement>();
+const boardUser = ref<any>(null);
+const boardItems = ref<BoardItem[]>([]);
+const boardLoading = ref(false);
+const boardError = ref<string | null>(null);
+const boardSaving = ref(false);
+
+function openBoard(user: any) {
+    boardUser.value = user;
+    boardItems.value = [];
+    boardError.value = null;
+    boardDialog.value?.showModal();
+    fetchBoard();
+}
+
+async function fetchBoard() {
+    if (!boardUser.value) return;
+    boardLoading.value = true;
+    boardError.value = null;
+    try {
+        const data = await $fetch<BoardItem[]>(`/api/admin/users/${boardUser.value.id}/board`);
+        boardItems.value = data;
+    } catch (e: any) {
+        boardError.value = e.data?.message || e.message || "加载失败";
+    } finally {
+        boardLoading.value = false;
+    }
+}
+
+function getFieldValue(item: BoardItem, fieldName: string): string {
+    const field = item.payload?.[fieldName];
+    if (field && typeof field === "object" && "value" in field) {
+        return String(field.value ?? "");
+    }
+    return "";
+}
+
+function getFieldLabel(item: BoardItem, fieldName: string): string {
+    const field = item.payload?.[fieldName];
+    if (field && typeof field === "object" && "label" in field) {
+        return String(field.label ?? fieldName);
+    }
+    return fieldName;
+}
+
+function getWidgetDisplayName(item: BoardItem): string {
+    if (item.kind === "custom_app") {
+        return item.custom_app_widget_key || item.custom_app_id || "Custom Widget";
+    }
+    return item.widget_key || "Unknown";
+}
+
+function getWidgetKindLabel(item: BoardItem): string {
+    return item.kind === "custom_app" ? "应用组件" : "内置";
+}
+
+const payloadForm = reactive<Record<string, string>>({});
+const editingItem = ref<BoardItem | null>(null);
+const payloadEditDialog = ref<HTMLDialogElement>();
+
+function openEditPayload(item: BoardItem) {
+    editingItem.value = item;
+    for (const key of Object.keys(payloadForm)) {
+        delete payloadForm[key];
+    }
+    for (const [key, val] of Object.entries(item.payload || {})) {
+        payloadForm[key] = getFieldValue(item, key);
+    }
+    payloadEditDialog.value?.showModal();
+}
+
+async function savePayload() {
+    if (!editingItem.value || !boardUser.value) return;
+    boardSaving.value = true;
+    try {
+        const payload: Record<string, any> = {};
+        for (const item of boardItems.value) {
+            if (item.id === editingItem.value!.id) {
+                for (const [key, val] of Object.entries(payloadForm)) {
+                    payload[key] = {
+                        value: val,
+                        label: getFieldLabel(editingItem.value!, key),
+                    };
+                }
+            }
+        }
+
+        await $fetch(
+            `/api/admin/users/${boardUser.value.id}/board/items/${editingItem.value.id}/payload`,
+            {
+                method: "POST",
+                body: { payload },
+            },
+        );
+
+        payloadEditDialog.value?.close();
+        await fetchBoard();
+    } catch (e: any) {
+        alert(e.data?.message || e.message || "保存失败");
+    } finally {
+        boardSaving.value = false;
+    }
+}
+
+async function removeBoardItem(item: BoardItem) {
+    if (!boardUser.value) return;
+    if (!confirm(`确定要移除组件 "${getWidgetDisplayName(item)}" 吗？`)) return;
+
+    try {
+        await $fetch(
+            `/api/admin/users/${boardUser.value.id}/board/items/${item.id}`,
+            { method: "DELETE" },
+        );
+        await fetchBoard();
+    } catch (e: any) {
+        alert(e.data?.message || e.message || "移除失败");
+    }
+}
 
 definePageMeta({
     layout: "admin",
     middleware: ["auth"],
 });
+
+interface TokenInfo {
+    hasToken: boolean;
+    needsRefresh: boolean;
+    accessToken: string | null;
+    expiresAt: string | null;
+    refreshTokenExpiresAt: string | null;
+}
+
+const tokenCache = ref<Record<string, TokenInfo>>({});
+const loadingToken = ref<string | null>(null);
+const copiedId = ref<string | null>(null);
+
+async function fetchToken(userId: string) {
+    loadingToken.value = userId;
+    try {
+        const data = await $fetch<TokenInfo>(`/api/admin/users/${userId}/token`);
+        tokenCache.value[userId] = data;
+    } catch {
+        tokenCache.value[userId] = { hasToken: false, needsRefresh: true, accessToken: null, expiresAt: null, refreshTokenExpiresAt: null };
+    } finally {
+        loadingToken.value = null;
+    }
+}
+
+function copyToken(userId: string) {
+    const token = tokenCache.value[userId]?.accessToken;
+    if (!token) return;
+    navigator.clipboard.writeText(token);
+    copiedId.value = userId;
+    setTimeout(() => {
+        if (copiedId.value === userId) copiedId.value = null;
+    }, 2000);
+}
 
 const LIMIT = 20;
 const users = ref<any[]>([]);

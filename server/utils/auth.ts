@@ -23,7 +23,7 @@ export const auth = betterAuth({
           clientId: process.env.SOLIAN_CLIENT_ID as string,
           clientSecret: process.env.SOLIAN_CLIENT_SECRET as string,
           discoveryUrl: "https://solian.app/.well-known/openid-configuration",
-          scopes: ["openid", "profile", "email", "account.connections", "posts.create", "posts.react"],
+          scopes: ["openid", "profile", "email", "account.connections", "posts.create", "posts.react", "accounts.profile.board.manage"],
         },
       ],
     }),

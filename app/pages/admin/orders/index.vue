@@ -1,7 +1,7 @@
 <template>
     <div>
-        <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-2xl font-bold">订单管理</h1>
+        <div class="mb-4 flex items-center justify-between md:mb-6">
+            <h1 class="text-xl font-bold md:text-2xl">订单管理</h1>
             <div class="flex gap-2">
                 <button
                     v-for="s in statusFilters"
