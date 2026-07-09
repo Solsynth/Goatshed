@@ -178,7 +178,7 @@
             <div class="modal-box max-w-2xl">
                 <h3 class="text-lg font-bold">看板管理 — {{ boardUser?.name }}</h3>
                 <p class="mt-1 text-sm text-base-content/60">
-                    通过 Passport 管理端接口管理用户主页看板组件（含自定义应用载荷覆盖）
+                    查看 / 调整用户看板；自定义应用载荷通过应用 private API 推送
                 </p>
 
                 <div v-if="boardLoading" class="flex items-center justify-center py-8">
@@ -388,8 +388,8 @@ import { Users, Pencil, Trash2, Loader2, KeyRound, Copy, Check, RefreshCw, Layou
 useHead({ title: "Admin - 用户管理" });
 
 // ── Board Management ──
-// Uses Passport admin routes via /api/admin/users/:id/board*
-// Payload fields follow the universal envelope: { value, label, format? }
+// Layout: user self-board (Passport). Custom-app payload: app private API.
+// Payload envelope: { value, label, format? }
 
 interface BoardPayloadField {
     value: unknown;

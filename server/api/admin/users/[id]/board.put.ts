@@ -1,12 +1,10 @@
 import { requireAdmin } from "~~/server/utils/admin";
-import { boardAdminUrl, getBoardAdminContext } from "~~/server/utils/boardAdmin";
+import { getTargetUserBoardAccess, replaceUserBoard } from "~~/server/utils/boardAdmin";
 
 /**
- * Replace the full board layout for a user via Passport admin API.
- *
- * Note: custom-app widget payloads on replace are still server-owned —
- * client-supplied custom-app payloads are ignored/preserved by Passport.
- * Use the per-item payload endpoint for payload updates.
+ * Replace board layout via the user's self-board API.
+ * Custom-app payloads on items are ignored/preserved by Passport — use
+ * the private app-secret payload endpoint for custom-app data.
  */
 export default defineEventHandler(async (event) => {
   await requireAdmin(event);
@@ -15,27 +13,18 @@ export default defineEventHandler(async (event) => {
   if (!id) throw createError({ statusCode: 400, statusMessage: "Missing user ID" });
 
   const body = await readBody(event);
-  const { adminToken, solarAccountId } = await getBoardAdminContext(event, id);
-  const config = useRuntimeConfig(event);
-  const url = boardAdminUrl(config.public.apiBaseUrl, solarAccountId);
-
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${adminToken}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("[board.put] Downstream error:", { url, status: response.status, body: text });
-    throw createError({
-      statusCode: response.status,
-      message: text || `Passport admin board API returned ${response.status}`,
-    });
+  if (!Array.isArray(body)) {
+    throw createError({ statusCode: 400, statusMessage: "Body must be a board item array" });
   }
 
-  return await response.json();
+  const token = await getTargetUserBoardAccess(id);
+  const config = useRuntimeConfig(event);
+
+  try {
+    return await replaceUserBoard(config.public.apiBaseUrl, token, body);
+  } catch (e: any) {
+    if (e.statusCode) throw e;
+    console.error("[board.put] Error:", e);
+    throw createError({ statusCode: 500, message: e.message || "Failed to update board" });
+  }
 });

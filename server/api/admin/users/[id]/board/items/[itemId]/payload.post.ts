@@ -1,14 +1,23 @@
 import { requireAdmin } from "~~/server/utils/admin";
-import { boardAdminUrl, getBoardAdminContext } from "~~/server/utils/boardAdmin";
+import {
+  fetchUserBoard,
+  getAppBoardSecret,
+  getTargetSolarAccountId,
+  getTargetUserBoardAccess,
+  privateBoardPayloadUrl,
+  replaceUserBoard,
+  type BoardItem,
+} from "~~/server/utils/boardAdmin";
 
 /**
- * Admin override: push payload to any board item (prebuilt or custom-app).
+ * Push widget payload.
  *
- * Uses Passport admin API — not the Develop app-secret private route.
- * Payload must follow the universal envelope contract:
- * { field: { value, label, format? } }
+ * - custom_app (Goatshed app): Develop private API with app secret
+ *   POST /develop/private/apps/{app_id}/board/payload
+ * - prebuilt: user self-board PUT (client-owned payload)
  *
- * See docs/ACCOUNT_ADMIN_API.md and docs/ACCOUNT_BOARD.md.
+ * Private API cannot update other apps' widgets or prebuilt items.
+ * See docs/CUSTOM_APP_BOARD_PRIVATE_API.md and docs/ACCOUNT_BOARD.md.
  */
 export default defineEventHandler(async (event) => {
   await requireAdmin(event);
@@ -24,29 +33,72 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Body must include a payload object" });
   }
 
-  const { adminToken, solarAccountId } = await getBoardAdminContext(event, id);
+  const token = await getTargetUserBoardAccess(id);
   const config = useRuntimeConfig(event);
-  const url = boardAdminUrl(
-    config.public.apiBaseUrl,
-    solarAccountId,
-    `/items/${encodeURIComponent(itemId)}/payload`,
-  );
+  const board = await fetchUserBoard(config.public.apiBaseUrl, token);
+  const item = board.find((x) => x.id === itemId);
+  if (!item) {
+    throw createError({ statusCode: 404, statusMessage: "Board item not found" });
+  }
 
+  const payload = body.payload as Record<string, unknown>;
+
+  // Prebuilt widgets: user client owns payload → self-board replace
+  if (item.kind === "prebuilt" || !item.kind) {
+    const updated: BoardItem[] = board.map((x) =>
+      x.id === itemId ? { ...x, payload } : x,
+    );
+    const result = await replaceUserBoard(config.public.apiBaseUrl, token, updated);
+    return result.find((x) => x.id === itemId) ?? { success: true };
+  }
+
+  // Custom-app widgets: only the owning app secret may set payload
+  if (item.kind !== "custom_app") {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Unsupported board item kind: ${item.kind}`,
+    });
+  }
+
+  const widgetKey =
+    body.widget_key
+    || item.custom_app_widget_key
+    || item.widget_key;
+  if (!widgetKey) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing widget_key for custom-app board item",
+    });
+  }
+
+  const solarAccountId = await getTargetSolarAccountId(id);
+  const { appId, secret } = getAppBoardSecret();
+  const url = privateBoardPayloadUrl(config.public.apiBaseUrl, appId);
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${adminToken}`,
+      authorization: `Bearer ${secret}`,
+      "x-app-secret": secret,
     },
-    body: JSON.stringify({ payload: body.payload }),
+    body: JSON.stringify({
+      account_id: solarAccountId,
+      widget_key: widgetKey,
+      board_item_id: itemId,
+      payload,
+    }),
   });
 
   if (!response.ok) {
     const text = await response.text();
-    console.error("[payload.post] Downstream error:", { url, status: response.status, body: text });
+    console.error("[payload.post] Private board API error:", {
+      url,
+      status: response.status,
+      body: text,
+    });
     throw createError({
       statusCode: response.status,
-      message: text || `Passport admin board payload API returned ${response.status}`,
+      message: text || `Develop private board payload API returned ${response.status}`,
     });
   }
 

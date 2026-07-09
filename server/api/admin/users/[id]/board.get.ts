@@ -1,5 +1,5 @@
 import { requireAdmin } from "~~/server/utils/admin";
-import { boardAdminUrl, getBoardAdminContext } from "~~/server/utils/boardAdmin";
+import { fetchUserBoard, getTargetUserBoardAccess } from "~~/server/utils/boardAdmin";
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event);
@@ -7,22 +7,14 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   if (!id) throw createError({ statusCode: 400, statusMessage: "Missing user ID" });
 
-  const { adminToken, solarAccountId } = await getBoardAdminContext(event, id);
+  const token = await getTargetUserBoardAccess(id);
   const config = useRuntimeConfig(event);
-  const url = boardAdminUrl(config.public.apiBaseUrl, solarAccountId);
 
-  const response = await fetch(url, {
-    headers: { authorization: `Bearer ${adminToken}` },
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error("[board.get] Downstream error:", { url, status: response.status, body: text });
-    throw createError({
-      statusCode: response.status,
-      message: text || `Passport admin board API returned ${response.status}`,
-    });
+  try {
+    return await fetchUserBoard(config.public.apiBaseUrl, token);
+  } catch (e: any) {
+    if (e.statusCode) throw e;
+    console.error("[board.get] Error:", e);
+    throw createError({ statusCode: 500, message: e.message || "Failed to fetch board" });
   }
-
-  return await response.json();
 });
